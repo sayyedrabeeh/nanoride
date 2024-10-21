@@ -28,7 +28,7 @@ class Brand(models.Model):
     status = models.CharField(max_length=10) 
     country = models.CharField(max_length=100)
     image = models.ImageField(upload_to='images/', default='images/default.jpg')
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True) 
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
