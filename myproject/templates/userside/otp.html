@@ -1,0 +1,478 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Product</title>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="{% static 'images/icons/favicon.png' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'fonts/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'fonts/iconic/css/material-design-iconic-font.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'fonts/linearicons-v1.0.0/icon-font.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/animate/animate.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/css-hamburgers/hamburgers.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/animsition/css/animsition.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/select2/select2.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/daterangepicker/daterangepicker.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/slick/slick.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/MagnificPopup/magnific-popup.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/perfect-scrollbar/perfect-scrollbar.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/util.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    {% comment %} <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"> {% endcomment %}
+    <style>
+        /* Styles for the login container */
+        .container .login-container {
+            display: flex;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            width: 1270px;
+            max-width: 100%;
+            height: 840px;
+            margin: 0 auto; /* Centering the container */
+        }
+        .container .login-container .login-form {
+            padding: 40px 40px;
+            width: 500px;
+        }
+        .container .login-container .login-image {
+            width: 100%;
+            height: 345px;
+            object-fit: cover;
+        }
+        .social-btn img {
+            width: 30px;
+            height: 30px;
+            margin: 0 5px;
+        }
+        .login-image-label {
+            width: 600px;
+            height: 470px;
+            margin: 20px 20px;
+        }
+        @media (max-width: 768px) {
+            .container .login-container {
+                flex-direction: column;
+                height: auto;
+                padding: 20px;
+            }
+            .container .login-container .login-form {
+                width: 100%;
+                padding: 20px;
+            }
+            .container .login-container .login-image-label {
+                display: none;
+            }
+        }
+        @media (max-width: 576px) {
+            .container .login-container .login-form {
+                padding: 15px;
+            }
+            .container .login-container {
+                padding: 15px;
+            }
+        }
+        .text-right {
+          margin-left:200px;
+        }
+
+        .otp-container {
+            {% comment %} display: flex; {% endcomment %}
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .otp-image {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .otp-form {
+            background-color: #fff;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .otp-input {
+            font-size: 2rem;
+            text-align: center;
+            width: 50px;
+            margin-right: 10px;
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        .form-text {
+            margin-top: 15px;
+        }
+
+        @media (max-width: 767px) {
+            .otp-container {
+                flex-direction: column;
+            }
+
+            .otp-image {
+                margin-bottom: 30px;
+            }
+
+            .otp-input {
+                width: 45px;
+                font-size: 1.5rem;
+            }
+        }
+        .icon-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 20px;
+        }
+        .icon-bar a {
+            color: #333;
+            font-size: 1.5rem;
+            text-decoration: none;
+        }
+
+        .icon-bar a:hover {
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .icon-bar a {
+                font-size: 1.2rem;
+            }
+        }
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .message.error {
+            background-color: #ffdddd; /* Light red background */
+            color: #d8000c; /* Dark red text */
+            border: 1px solid #d8000c; /* Dark red border */
+        }
+        
+        .message.success {
+            background-color: #ddffdd; /* Light green background */
+            color: #4caf50; /* Dark green text */
+            border: 1px solid #4caf50; /* Dark green border */
+        }
+    </style>
+</head>
+<body class="animsition">
+
+    <!-- Header -->
+    <header class="header-v4">
+        <div class="container-menu-desktop">
+            <div class="wrap-menu-desktop how-shadow1">
+                <nav class="limiter-menu-desktop container">
+                    <a href="#" class="logo">
+                        <h2>NANORIDE</h2>
+                    </a>
+                    <div class="menu-desktop">
+                        <ul class="main-menu">
+                            <li><a href="index.html">Home</a></li>
+                            <li class="active-menu"><a href="product.html">Shop</a></li>
+                            <li class="label1" data-label1="hot"><a href="shoping-cart.html">Features</a></li>
+                            <li><a href="blog.html">Blog</a></li>
+                            <li><a href="about.html">About</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="wrap-icon-header flex-w flex-r-m">
+                        <div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 js-show-modal-search">
+                            <i class="zmdi zmdi-search"></i>
+                        </div>
+                        <div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart" data-notify="2">
+                            <i class="zmdi zmdi-shopping-cart"></i>
+                        </div>
+                        <a href="#" class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti" data-notify="0">
+                            <i class="zmdi zmdi-favorite-outline"></i>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Header Mobile -->
+        <div class="wrap-header-mobile">
+            <div class="logo-mobile">
+                <a href="index.html"><h5>NANORIDE</h5></a>
+            </div>
+            <div class="wrap-icon-header flex-w flex-r-m m-r-15">
+                <div class="icon-header-item cl2 hov-cl1 trans-04 p-r-11 js-show-modal-search">
+                    <i class="zmdi zmdi-search"></i>
+                </div>
+                <div class="icon-header-item cl2 hov-cl1 trans-04 p-r-11 p-l-10 icon-header-noti js-show-cart" data-notify="2">
+                    <i class="zmdi zmdi-shopping-cart"></i>
+                </div>
+                <a href="#" class="dis-block icon-header-item cl2 hov-cl1 trans-04 p-r-11 p-l-10 icon-header-noti" data-notify="0">
+                    <i class="zmdi zmdi-favorite-outline"></i>
+                </a>
+            </div>
+            <div class="btn-show-menu-mobile hamburger hamburger--squeeze">
+                <span class="hamburger-box">
+                    <span class="hamburger-inner"></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Menu Mobile -->
+        <div class="menu-mobile">
+            <ul class="main-menu-m">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="product.html">Shop</a></li>
+                <li><a href="shoping-cart.html" class="label1 rs1" data-label1="hot">Features</a></li>
+                <li><a href="blog.html">Blog</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </div>
+
+        <!-- Modal Search -->
+        <div class="modal-search-header flex-c-m trans-04 js-hide-modal-search">
+            <div class="container-search-header">
+                <button class="flex-c-m btn-hide-modal-search trans-04 js-hide-modal-search">
+                    <img src="{% static 'images/icons/icon-close2.png' %}" alt="CLOSE">
+                </button>
+                <form class="wrap-search-header flex-w p-l-15" action="#" method="GET">
+                    <button class="flex-c-m trans-04">
+                        <i class="zmdi zmdi-search"></i>
+                    </button>
+                    <input class="stext-103 cl2 size-104" type="text" name="search" placeholder="Search...">
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- Product Section -->
+    <div class="container-fluid otp-container d-flex">
+        <div class="col-md-6 d-none d-md-block d-flex">
+            <img src="{% static 'images/login5.jpg' %}" alt="Car Image" class="otp-image">
+        </div>
+        <div class="col-md-4 otp-form">
+            <h4 class="mb-4">Verify your Email Address</h4>
+            <p>We have sent an OTP to your email, just use it here</p>
+            <form id="otp-form" method="POST" action="{% url 'verify_otp' %}">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between mb-3">
+                    <input type="text" class="form-control otp-input" maxlength="1" required name="otp_1">
+                    <input type="text" class="form-control otp-input" maxlength="1" required name="otp_2">
+                    <input type="text" class="form-control otp-input" maxlength="1" required name="otp_3">
+                    <input type="text" class="form-control otp-input" maxlength="1" required name="otp_4">
+                    <input type="text" class="form-control otp-input" maxlength="1" required name="otp_5">
+                    <input type="text" class="form-control otp-input" maxlength="1" required name="otp_6">
+                </div>
+                <div class="mb-3">
+                    <small class="form-text">OTP Resend in: <strong id="timer">00:30</strong></small>
+                </div>
+                <div id="otp-container" class="text-center">
+                    <div id="timer" class="mb-3"></div>
+                    <button id="verifyOtpButton" class="btn btn-primary mr-2" onclick="verifyOtp()">Verify OTP</button>
+                    <button id="resendOtpButton" class="btn btn-secondary" onclick="resendOtp()" disabled>Resend OTP</button>
+                </div>
+                <p class="form-text text-center mt-3">Want to change your email? <a href="#">Click Here</a></p>
+            </form>
+            <div class="container">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-danger">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center">
+        <div class="container p-4">
+            <p>© 2024 NANORIDE. All rights reserved.</p>
+        </div>
+    </footer>
+
+    {% comment %} <script src="{% static 'vendor/jquery/jquery-3.2.1.min.js' %}"></script>
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.min.js' %}"></script>
+
+    <script>
+        let timeLeft = 60; // 60 seconds
+        let countdown; // Variable to hold the countdown interval
+        const timerDisplay = document.getElementById('timer');
+        const verifyBtn = document.getElementById('verify-btn');
+        const resendBtn = document.getElementById('resend-btn');
+
+        function startTimer() {
+            timeLeft = 60; // Reset time left
+            updateTimerDisplay(); // Update display
+            clearInterval(countdown); // Clear existing interval
+
+            countdown = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay(); // Update display
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    verifyBtn.style.display = 'none'; // Hide verify button
+                    resendBtn.style.display = 'block'; // Show resend button
+                }
+            }, 1000); // Update every second
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.innerText = `00:0${minutes}:${seconds < 10 ? '0' : ''}${seconds}`; // Update display
+        }
+
+        // Start the timer when the page loads
+        window.onload = startTimer;
+
+        // Handle resend OTP button click
+        resendBtn.onclick = function() {
+            // Logic to resend OTP (e.g., AJAX request to your server)
+            console.log('Resending OTP...'); // Replace with actual resend logic
+            resendBtn.style.display = 'none'; // Hide resend button
+            verifyBtn.style.display = 'block'; // Show verify button
+            startTimer(); // Restart the timer
+        };
+
+        // Handle form submission
+       // Handle form submission
+        document.getElementById('otp-form').onsubmit = function(event) {
+            event.preventDefault();
+            
+            // Collect the entered OTP
+// Get the CSRF token from the meta tag
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+// Handle form submission
+document.getElementById('otp-form').onsubmit = function(event) {
+    event.preventDefault();
+    
+    // Collect the entered OTP
+    const otp = Array.from(document.querySelectorAll('.otp-input')).map(input => input.value).join('');
+
+    // Send the OTP to your backend for verification
+    $.ajax({
+        type: 'POST',
+        url: '/verify-otp/', // Replace with your backend URL
+        headers: {
+            'X-CSRFToken': csrfToken // Include the CSRF token in the headers
+        },
+        data: { otp: otp },
+        success: function(response) {
+            // Handle success
+            if (response.success) {
+                alert('OTP verified successfully!');
+                // Redirect to the login page or next step
+                window.location.href = '/login/'; // Replace with your login URL
+            } else {
+                alert('Invalid OTP. Please try again.');
+            }
+        },
+        error: function() {
+            alert('Error verifying OTP. Please try again.');
+        }
+    });
+};
+
+        };
+    </script> {% endcomment %}
+
+    <!-- Footer -->
+
+    <script>
+        // Set the expiration time and current time
+        var otpGeneratedTime = {{ request.session.otp_generated_time|default:0 }};
+        var otpExpirationTime = {{ request.session.otp_expiration_time|default:300 }}; // 5 minutes in seconds
+        var resendOtpTime = {{ request.session.resend_otp_time|default:30 }}; // 30 seconds for resend button
+        var countdown  ; // Countdown for the resend button
+        var timer; // e.g., 30 seconds
+
+        function startTimer() {
+            countdown = resendOtpTime;
+            var timer = setInterval(function() {
+                var minutes = Math.floor(countdown / 60);
+                var seconds = countdown % 60;
+
+                // Update the countdown display
+                document.getElementById("timer").innerHTML = minutes + "m " + seconds + "s ";
+
+                // If the countdown reaches 0, stop the timer and notify the user
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    document.getElementById("timer").innerHTML = "00:00";
+
+                    // Enable the resend OTP button when time is up
+                    document.getElementById("resendOtpButton").disabled = false;
+                }
+                countdown--;
+            }, 1000);
+        }
+
+        function resendOtp() {
+            // Send an AJAX request to your server to resend the OTP
+            // You might need to adjust the URL based on your Django setup
+            fetch("{% url 'resend_otp' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({
+                    // You can include any necessary data here
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("OTP has been resent. Please check your email.");
+                    // Optionally, you can reset the countdown here
+                    countdown =  resendOtpTime;// Reset the countdown to 30 seconds
+                    startTimer(); // Restart the timer
+                } else {
+                    alert("Failed to resend OTP. Please try again.");
+                }
+            });
+        }
+
+        // Start the timer when the page loads
+        window.onload = function() {
+            if (otpGeneratedTime && (Date.now() / 1000 - otpGeneratedTime < otpExpirationTime)) {
+                startTimer(); // Start the timer
+            } else {
+                document.getElementById("timer").innerHTML = "00:00";
+                document.getElementById("resendOtpButton").disabled = false; // Enable resend button if expired
+            }
+        };
+    </script>
+   
+    <!-- Scripts -->
+    <script src="{% static 'vendor/jquery/jquery-3.2.1.min.js' %}"></script>
+    <script src="{% static 'vendor/animsition/js/animsition.min.js' %}"></script>
+    <script src="{% static 'vendor/bootstrap/js/popper.js' %}"></script>
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'vendor/select2/select2.min.js' %}"></script>
+    <script src="{% static 'vendor/daterangepicker/moment.min.js' %}"></script>
+    <script src="{% static 'vendor/daterangepicker/daterangepicker.js' %}"></script>
+    <script src="{% static 'vendor/slick/slick.min.js' %}"></script>
+    <script src="{% static 'vendor/MagnificPopup/jquery.magnific-popup.min.js' %}"></script>
+    <script src="{% static 'vendor/perfect-scrollbar/perfect-scrollbar.min.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+      <!-- Include jQuery first -->
+      <script src="{% static 'js/jquery-3.2.1.min.js' %}"></script>
+      <!-- Include Popper.js -->
+      <script src="{% static 'js/popper.min.js' %}"></script>
+      <!-- Include Bootstrap JS -->
+      <script src="{% static 'js/bootstrap.min.js' %}"></script>
+</body>
+</html>

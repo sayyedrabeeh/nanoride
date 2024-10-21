@@ -1,0 +1,466 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Admin Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <style>
+        body {
+            font-family: "Roboto", sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #343a40;
+            padding-top: 20px;
+            z-index: 1000;
+        }
+
+        .sidebar a {
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ddd;
+            display: block;
+            transition: background-color 0.2s;
+        }
+
+        .sidebar a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        /* Main content area */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .filter-sort-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-sort-bar select,
+        .filter-sort-bar input[type="search"] {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            flex: 1;
+            max-width: 150px;
+        }
+
+        /* Table styling */
+        .table-wrapper {
+            background: #fff;
+            padding: 20px 25px;
+            margin: 30px 0;
+            border-radius: 3px;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+        }
+
+        .table-title {
+            padding-bottom: 15px;
+            background: #435d7d;
+            color: #fff;
+            padding: 16px 30px;
+            margin: -20px -25px 10px;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .status.listed {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status.delisted {
+            color: red;
+            font-weight: bold;
+        }
+
+        .btn {
+            border-radius: 2px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .btn.list {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn.relist {
+            background-color: #ffc107;
+            color: white;
+        }
+
+        .btn.edit {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn.delete {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        @media screen and (max-width: 768px) {
+            .main-content {
+                margin-left: 0; /* Collapse sidebar */
+                padding: 10px;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: relative; /* Allow it to move with the page */
+                height: auto; /* Set height to auto for collapsing */
+            }
+
+            .sidebar a {
+                text-align: center; /* Center the links in mobile view */
+            }
+
+            .filter-sort-bar {
+                flex-direction: column; /* Stack elements vertically */
+            }
+
+            .filter-sort-bar div {
+                margin-bottom: 10px; /* Add some spacing between stacked elements */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header" style='color: wheat;font-size: 35px;font-weight: 900;margin-left:20px'>NANORIDE</div>
+
+        <div class="sidebar">
+            {% comment %} <div class="sidebar-header">Admin Panel</div> {% endcomment %}
+            <a href="#" id="dashboard">Dashboard</a>
+            <a href="#" id="customers">Customers</a>
+            <a href="#" id="product">Product</a>
+            <a href="#" id="orders">Orders</a>
+            <a href="#" id="offer">Offer</a>
+            <a href="#" id="brand">Brand</a>
+            <a href="#" id="category">Category</a>
+            <a href="#" id="report">Report</a>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content" id="mainContent">
+        <!-- Filter, Sort, Search Bar -->
+        <div class="filter-sort-bar">
+            <div>
+                <select id="filter">
+                    <option value="all">All</option>
+                    <option value="listed">Listed</option>
+                    <option value="delisted">Delisted</option>
+                </select>
+
+                <select id="sort">
+                    <option value="name">Sort by Name</option>
+                    <option value="date">Sort by Date</option>
+                </select>
+            </div>
+
+            <div>
+                <input type="search" id="search" placeholder="Search products...">
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="table-wrapper">
+                <div class="table-title">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <h2>Manage <b>Types</b></h2>
+                        </div>
+                        <div class="col-sm-6 text-right">
+                            <a href="#addProductModal" class="btn btn-success" data-toggle="modal">
+                                <i class="fas fa-plus"></i> <span>Add New type</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Image</th>
+                            <th>Quantity</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTable">
+                        <!-- Example product row -->
+                        <tr data-status="listed">
+                            <td><img src="{% static 'images/product1.png' %}" style="width:40px;height:40px;"></td>
+                            <td>Product 1</td>
+                            <td>Electronics</td>
+                            <td>$299</td>
+                            <td><span class="status listed">Listed</span></td>
+                            <td>
+                                <button class="btn relist" data-id="1" data-status="listed">
+                                    <i class="fas fa-arrow-up" title="Delist"></i>
+                                </button>
+                                <button class="btn edit" data-id="1" data-toggle="modal" data-target="#editProductModal" data-name="Product 1" data-category="Electronics" data-price="299" data-image="{% static 'images/product1.png' %}">
+                                    <i class="fas fa-edit" title="Edit"></i>
+                                </button>
+                                <button class="btn delete" data-id="1">
+                                    <i class="fas fa-trash" title="Delete"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr data-status="delisted">
+                            <td><img src="{% static 'images/product2.png' %}" style="width:40px;height:40px;"></td>
+                            <td>Product 2</td>
+                            <td>Fashion</td>
+                            <td>$99</td>
+                            <td><span class="status delisted">Delisted</span></td>
+                            <td>
+                                <button class="btn list" data-id="2" data-status="delisted">
+                                    <i class="fas fa-arrow-down" title="Relist"></i>
+                                </button>
+                                <button class="btn edit" data-id="2" data-toggle="modal" data-target="#editProductModal" data-name="Product 2" data-category="Fashion" data-price="99" data-image="{% static 'images/product2.png' %}">
+                                    <i class="fas fa-edit" title="Edit"></i>
+                                </button>
+                                <button class="btn delete" data-id="2">
+                                    <i class="fas fa-trash" title="Delete"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- Add more products here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add Product Modal -->
+        <div class="modal fade" id="addProductModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Product</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="addProductForm">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" class="form-control" id="newProductName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <input type="text" class="form-control" id="newProductCategory" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Price</label>
+                                <input type="number" class="form-control" id="newProductPrice" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Image URL</label>
+                                <input type="text" class="form-control" id="newProductImage" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Add Product</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Product Modal -->
+        <div class="modal fade" id="editProductModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Product</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="editProductForm">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" class="form-control" id="editProductName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <input type="text" class="form-control" id="editProductCategory" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Price</label>
+                                <input type="number" class="form-control" id="editProductPrice" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Image URL</label>
+                                <input type="text" class="form-control" id="editProductImage" required>
+                            </div>
+                            <input type="hidden" id="editProductId">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- JavaScript for functionality -->
+        <script>
+            // Handle filtering
+            $("#filter").on("change", function () {
+                var filterValue = $(this).val();
+                $("#productTable tr").each(function () {
+                    $(this).toggle(filterValue === "all" || $(this).data("status") === filterValue);
+                });
+            });
+
+            // Handle sorting functionality (not implemented)
+            $("#sort").on("change", function () {
+                // Sorting logic can be implemented based on the selected value
+            });
+
+            // Handle relist and edit functionality
+            $(document).on("click", ".btn.list, .btn.relist", function () {
+                var productId = $(this).data("id");
+                var currentStatus = $(this).data("status");
+
+                // Update product status
+                if (currentStatus === "listed") {
+                    $(this).closest("tr").data("status", "delisted");
+                    $(this).html('<i class="fas fa-arrow-down" title="Relist"></i>');
+                    $(this).removeClass('relist').addClass('list');
+                    $(this).closest("tr").find(".status").text("Delisted").removeClass("listed").addClass("delisted");
+                } else {
+                    $(this).closest("tr").data("status", "listed");
+                    $(this).html('<i class="fas fa-arrow-up" title="Delist"></i>');
+                    $(this).removeClass('list').addClass('relist');
+                    $(this).closest("tr").find(".status").text("Listed").removeClass("delisted").addClass("listed");
+                }
+            });
+
+            // Handle delete functionality
+            $(document).on("click", ".btn.delete", function () {
+                $(this).closest("tr").remove(); // Remove the product row
+            });
+
+            // Load product data into edit modal
+            $(document).on("click", ".btn.edit", function () {
+                var productId = $(this).data("id");
+                var productName = $(this).data("name");
+                var productCategory = $(this).data("category");
+                var productPrice = $(this).data("price");
+                var productImage = $(this).data("image");
+
+                $("#editProductId").val(productId);
+                $("#editProductName").val(productName);
+                $("#editProductCategory").val(productCategory);
+                $("#editProductPrice").val(productPrice);
+                $("#editProductImage").val(productImage);
+            });
+
+            // Edit product form submission
+            $("#editProductForm").on("submit", function (e) {
+                e.preventDefault();
+
+                var productId = $("#editProductId").val();
+                var updatedName = $("#editProductName").val();
+                var updatedCategory = $("#editProductCategory").val();
+                var updatedPrice = $("#editProductPrice").val();
+                var updatedImage = $("#editProductImage").val();
+
+                // Update product row in the table
+                var productRow = $("#productTable tr[data-id='" + productId + "']");
+                productRow.find("td:nth-child(2)").text(updatedName);
+                productRow.find("td:nth-child(3)").text(updatedCategory);
+                productRow.find("td:nth-child(4)").text("$" + updatedPrice);
+                productRow.find("td:nth-child(1) img").attr("src", updatedImage);
+
+                // Hide the edit modal
+                $("#editProductModal").modal("hide");
+            });
+
+            // Add new product
+            $("#addProductForm").on("submit", function (e) {
+                e.preventDefault();
+
+                var newName = $("#newProductName").val();
+                var newCategory = $("#newProductCategory").val();
+                var newPrice = $("#newProductPrice").val();
+                var newImage = $("#newProductImage").val();
+
+                var newRow = `
+                    <tr data-status="listed">
+                        <td><img src="${newImage}" style="width:40px;height:40px;"></td>
+                        <td>${newName}</td>
+                        <td>${newCategory}</td>
+                        <td>$${newPrice}</td>
+                        <td><span class="status listed">Listed</span></td>
+                        <td>
+                            <button class="btn relist" data-id="new" data-status="listed">
+                                <i class="fas fa-arrow-up" title="Delist"></i>
+                            </button>
+                            <button class="btn edit" data-id="new" data-toggle="modal" data-target="#editProductModal" data-name="${newName}" data-category="${newCategory}" data-price="${newPrice}" data-image="${newImage}">
+                                <i class="fas fa-edit" title="Edit"></i>
+                            </button>
+                            <button class="btn delete" data-id="new">
+                                <i class="fas fa-trash" title="Delete"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+
+                $("#productTable").append(newRow);
+
+                // Reset form fields
+                $(this).trigger("reset");
+                $("#addProductModal").modal("hide");
+            });
+
+            // Search functionality
+            $("#search").on("keyup", function () {
+                var searchValue = $(this).val().toLowerCase();
+                $("#productTable tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(searchValue) > -1)
+                });
+            });
+        </script>
+    </div>
+</body>
+
+</html>
