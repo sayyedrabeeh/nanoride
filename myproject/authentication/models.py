@@ -15,3 +15,6 @@ class CustomUser(AbstractUser):
         related_name='customuser_set',  # Change related_name
         blank=True,
     )
+ 
+    # You can add more fields if needed, such as alt text, order, etc.
+ 

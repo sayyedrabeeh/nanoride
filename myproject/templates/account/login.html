@@ -172,6 +172,7 @@
             <div class="login-image-label d-md-block">
                 <img src="{% static 'images/login4.jpg' %}" alt="Login Image" class="login-image">
             </div>
+          
             <div class="login-form mt-4">
                 <h1><b>Login</b></h1>
                 <form method="POST" action="{% url 'account_login' %}">
@@ -193,9 +194,11 @@
                 </form>
                 {% if messages %}
     {% for message in messages %}
-        <div class="alert alert-danger">{{ message }}</div>
+        <div style="color: {% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}black{% endif %};">
+            {{ message }}
+        </div>
     {% endfor %}
-   {% endif %}
+{% endif %}
                 <div class="text-center mt-4">
                     <p>Didn't Have An Account? <a href="{% url 'custom_signup' %}">Sign Up</a></p>
 

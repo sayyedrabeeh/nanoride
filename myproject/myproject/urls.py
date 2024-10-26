@@ -19,6 +19,7 @@ from django.urls import path,include
 from allauth.account.views import LoginView,SignupView
 from django.conf import settings
 from django.conf.urls.static import static
+from authentication.views import home
 
 
 
@@ -27,6 +28,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('authentication.urls')),
     path('management/', include('management.urls')),
+    path('',home,name='home'),
     path('accounts/', include('allauth.urls')),
     path('accounts/login/', LoginView.as_view(), name='custom_login'),
     path('accounts/signup/', SignupView.as_view(), name='custom_signup'), 

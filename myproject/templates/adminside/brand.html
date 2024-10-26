@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brands-NANORIDE</title>
+    <title>Brand-NANORIDE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -152,23 +152,154 @@
                 margin-bottom: 10px; /* Add some spacing between stacked elements */
             }
         }
+        a.active {
+            font-weight: bold;
+            background-color: #00a7eb  /* or any color you prefer */
+        }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: #333;
+            transition: transform 0.3s ease;
+            transform: translateX(0); /* Visible by default */
+            overflow-y: auto;
+        }
+        
+        .sidebar.hidden {
+            transform: translateX(-100%); /* Hide the sidebar */
+        }
+        
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+        }
+        
+        .sidebar-content {
+            display: block;
+        }
+        
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: block;
+        }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            transition: margin-left 0.3s ease;
+        }
+        
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 60px; /* Small width for collapsed state */
+            height: 100vh;
+            background-color: #333;
+            transition: width 0.3s ease;
+            overflow: hidden; /* Hide overflow for small sidebar */
+        }
+        
+        .sidebar.expanded {
+            width: 250px; /* Width when expanded */
+        }
+        
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+        }
+        
+        .sidebar-title {
+            display: none; /* Hide by default */
+        }
+        
+        .sidebar.expanded .sidebar-title {
+            display: block; /* Show when expanded */
+        }
+        
+        .sidebar-content {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            padding: 15px 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar a .link-text {
+            display: none; /* Hide text in collapsed state */
+            margin-left: 10px; /* Space between icon and text */
+        }
+        
+        .sidebar.expanded a .link-text {
+            display: inline; /* Show text when expanded */
+        }
+        
+        .sidebar a i {
+            margin-right: 10px; /* Space between icon and text */
+        }
+        
+        .main-content {
+            margin-left: 60px; /* Initial margin to accommodate small sidebar */
+            transition: margin-left 0.3s ease;
+        }
+        
+        .main-content.expanded {
+            margin-left: 250px; /* Margin when sidebar is expanded */
+        }
+        
+        
     </style>
 </head>
 
 <body>
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <div class="sidebar-header" style='color: wheat;font-size: 35px;font-weight: 900;margin-left:20px'>NANORIDE</div>
-
-        <a href="#" id="dashboard">Dashboard</a>
-        <a href="#" id="customers">Customers</a>
-        <a href="#" id="product">Product</a>
-        <a href="#" id="orders">Orders</a>
-        <a href="#" id="offer">Offer</a>
-        <a href="#" id="brand">Brand</a>
-        <a href="#" id="category">Category</a>
-        <a href="#" id="report">Report</a>
+        <div class="sidebar-header">
+            <button id="toggleButton" style="background: none; border: none; color: white; cursor: pointer; font-size: 24px;">&#9776;</button>
+            <span class="sidebar-title" style='color: wheat;font-size: 35px;font-weight: 900; '>NANORIDE</span>
+        </div>
+        
+        <div class="sidebar-content">
+            <a href="{% url 'custom_logout1' %}"><span class="link-text"><h5>Log Out</h5></span></a> 
+            <a href=" " id="dashboard"><i class="fas fa-tachometer-alt"></i><span class="link-text">Dashboard</span></a>
+            <a href="{% url 'users' %} " id="customers"><i class="fas fa-users active"></i><span class="link-text">Customers</span></a>
+            <a href="{% url 'products' %}" ><i class="fas fa-box"></i><span class="link-text">Product</span></a>
+            <a href=" " id="orders"><i class="fas fa-shopping-cart"></i><span class="link-text">Orders</span></a>
+            <a href=" " id="offer"><i class="fas fa-tag"></i><span class="link-text">Offer</span></a>
+            <a href="{% url 'brand' %}" id="brand"class="active" ><i class="fas fa-th"></i><span class="link-text">Brand</span></a>
+            <a href="{% url 'add_category_view' %}" id="category"><i class="fas fa-folder"></i><span class="link-text">Category</span></a>
+            <a href=" " id="report"><i class="fas fa-chart-line"></i><span class="link-text">Report</span></a>
+            <a href="{% url 'Edition' %}" id="edition"><i class="fas fa-book"></i><span class="link-text">Edition</span></a>
+            <a href="{% url 'type1' %}"><i class="fas fa-cogs"></i><span class="link-text">Type</span></a>
+            
+        </div>
     </div>
+    
+    
     
     <!-- Main Content Area -->
     <div class="main-content" id="mainContent">
@@ -185,7 +316,7 @@
                 </select>
             </div>
             <div>
-                <input type="search" id="search" placeholder="Search products...">
+                <input type="search" id="search" placeholder="Search type...">
             </div>
         </div>
     
@@ -194,11 +325,11 @@
                 <div class="table-title">
                     <div class="row">
                         <div class="col-sm-6">
-                            <h2>Manage <b>Brands</b></h2>
+                            <h2>Manage <b>brands</b></h2>
                         </div>
                         <div class="col-sm-6 text-right">
                             <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addProductModal">
-                                 Add New Product
+                                 Add New brand
                             </button>
                         </div>
                     </div>
@@ -209,7 +340,7 @@
                             <th>#</th>
                             <th>Name</th>
                             <th>Images</th>
-                            <th>Country</th>
+                            <th>country</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -221,25 +352,36 @@
                             <td>{{ i.brand_name }}</td>
                             <td><img src="{{ i.image.url }}" style="width:40px;height:40px;"></td>
                             <td>{{ i.country }}</td>
-                            <td><span class="status {{ i.status | lower }}">{{ i.status }}</span></td>
+                            <td>
+                                <span class="status" 
+                                style="font-weight: bold; color: {% if i.status == 'listed' %} green {% else %} red {% endif %};">
+                              {{ i.status }}
+                          </span>                        
+                            </td>
                             
                             <td>
-                                <button class="btn toggle-status" style="background-color: {% if i.status == 'listed' %} #28a745 {% else %} #c92a2a {% endif %}; color: white;" data-id="{{ i.id }}" data-status="{{ i.status }}">
-                                    {% if i.status == 'listed' %}
-                                        <i class="fas fa-arrow-down"></i>
-                                    {% else %}
-                                        <i class="fas fa-arrow-up"></i>
-                                    {% endif %}
-                                </button>
+                                <form method="POST" action="{% url 'list_brand' %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="id" value="{{ i.id }}">
+                                    <input type="hidden" name="status" value="{% if i.status == 'listed' %}unlisted{% else %}listed{% endif %}">
+                                    <button class="btn toggle-status" style="background-color: {% if i.status == 'listed' %}#c92a2a{% else %}#28a745{% endif %}; color: white;">
+                                        {% if i.status == 'listed' %}
+                                            <i class="fas fa-arrow-down"></i>
+                                        {% else %}
+                                            <i class="fas fa-arrow-up"></i>
+                                        {% endif %}
+                                    </button>
+                                </form>
 
-<button class="btn btn-edit" style="background-color: #007bff; color: white;"
-        data-id="{{ i.id }}"
-        data-name="{{ i.brand_name }}"
-        data-country="{{ i.country }}"
-        data-image="{{ .image.url }}"> 
+                                {% comment %} <a href="{% url 'edit_brand' i.id  %}" 
+                                class="btn btn-edit" 
+                                style="background-color: #007bff; color: white; text-decoration: none; display: inline-block; padding: 0.375rem 0.75rem; border: 1px solid transparent; border-radius: 0.25rem;">
+                                 <i class="fas fa-edit" title="Edit"></i>
+                             </a> {% endcomment %}
+                            
+                                <a href="{% url 'edit_brand' i.id  %}"   class="btn btn-edit" data-toggle="modal" data-target="#editBrandModal{{ i.id  }}">
                                     <i class="fas fa-edit" title="Edit"></i>
-                                </button>
-                                 
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -252,26 +394,35 @@
         <div class="modal fade" id="addProductModal" tabindex="-1" role="dialog">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add New Brand</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <form id="addBrandForm" enctype="multipart/form-data" method="POST">
+                    <form action="{% url 'add_brand' %}" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add New Brand</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
                         <div class="modal-body">
                             <div class="form-group">
                                 <label>Name</label>
-                                <input type="text" class="form-control" id="BrandName" placeholder="Enter brand name" name="brand_name" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Upload Image</label>
-                                <input type="file" class="form-control-file" id="newBrandImage" name="image" accept="image/*" required>
+                                <input type="text" class="form-control" name="brand_name" placeholder="Enter brand name" required>
+                                {% if errors.brand_name %}
+                                    <div class="text-danger">{{ errors.brand_name }}</div>
+                                {% endif %}
                             </div>
                             <div class="form-group">
                                 <label>Country</label>
-                                <input type="text" class="form-control" id="newBrandCountry" placeholder="Enter country" name="country" required>
+                                <input type="text" class="form-control" name="country" placeholder="Enter country" required>
+                                {% if errors.country %}
+                                    <div class="text-danger">{{ errors.country }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label>Upload Image</label>
+                                <input type="file" class="form-control-file" name="image" accept="image/*" required>
+                                {% if errors.image %}
+                                    <div class="text-danger">{{ errors.image }}</div>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -279,30 +430,36 @@
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
                     </form>
+                    
                 </div>
             </div>
         </div>
+
+        {% for i in brand %}
     
-        <div class="modal fade" id="editBrandModal" tabindex="-1" role="dialog">
+        <div class="modal fade" id="editBrandModal{{ i.id }}" tabindex="-1" role="dialog">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Edit Brand</h5>
+                        <h3 class="modal-title">Edit brand :{{ i.brand_name }}</h3>
+                        
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form id="editBrandForm" enctype="multipart/form-data" method="POST">
+                    <form id="editBrandForm" action="{% url 'edit_brand' i.id %}" enctype="multipart/form-data" method="POST">
+                       
+                        {% csrf_token %}
                         <div class="modal-body">
                             <input type="hidden" id="editBrandId">
                             <div class="form-group">
                                 <label>Name</label>
-                                <input type="text" class="form-control" id="editBrandName" placeholder="Enter brand name" required>
+                                <input type="text" class="form-control" id="editBrandName" name=' brand_name' value="{{ i.brand_name }}"   required>
                             </div>
 
                             <div class="form-group">
                                 <label>Country</label>
-                                <input type="text" class="form-control" id="editBrandCountry" placeholder="Enter country" required>
+                                <input type="text" class="form-control" id="editBrandCountry" name='country'  value="{{ i.country }}"   required>
                             </div>
                             
                             <div class="form-group">
@@ -310,15 +467,10 @@
                                 <input type="file" class="form-control-file" id="editBrandImage" name="image" accept="image/*" required>
                             </div>
                             <div class="form-group">
-                                <img id="imagePreview" style="display:none; width:100%;"> <!-- Image preview -->
+                                <img src="{{ .image.url }}" id="imagePreview" style="display:none; width:100%;"> <!-- Image preview -->
                             </div>
                             <!-- Add cropping tools -->
-                            <div class="cropper-tools">
-                                <button type="button" id="cropButton" class="btn btn-primary">Crop</button>
-                                <button type="button" id="zoomIn" class="btn btn-secondary">Zoom In</button>
-                                <button type="button" id="zoomOut" class="btn btn-secondary">Zoom Out</button>
-                                <button type="button" id="resetCrop" class="btn btn-secondary">Reset</button>
-                            </div>
+                             
                         </div>
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -328,273 +480,276 @@
                 </div>
             </div>
         </div>
-        
-        <script>
-            // Filter functionality
-            $("#filter").on("change", function () {
-                var filterValue = $(this).val();
-                $("#productTable tr").each(function () {
-                    $(this).toggle(filterValue === "all" || $(this).data("status") === filterValue);
-                });
-            });
-    
-            // Handle status toggle and editing
-            $(document).on("click", ".toggle-status", function () {
-                var $row = $(this).closest("tr");
-                var brandId = $row.data("id");
-                var currentStatus = $row.data("status");
-                var newStatus = currentStatus === "listed" ? "unlisted" : "listed";
+        {% endfor %}      
+         <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggleButton = document.getElementById('toggleButton');
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.getElementById('mainContent');
             
-                // Update the UI immediately for better user experience
-                $row.data("status", newStatus);
-                $(this).find("i").toggleClass("fa-arrow-down fa-arrow-up");
-            
-                // Change the status text and button color based on the new status
-                if (newStatus === "listed") {
-                    $row.find(".status").text("Listed").css("color", "green");
-                     $(this).css({
-                        "background-color": "#28a745",
-                        "font-weight": "bold"
-                    });// Green for listed
-                } else {
-                    $row.find(".status").text("Unlisted").css("color", "red");
-                    $(this).css({
-                        "background-color": "#c92a2a",
-                        "font-weight": "bold"
-                    }); // Red for unlisted
-                }
-            
-                // Send AJAX request to update status in the database
-                $.ajax({
-                    url: '/management/toggle-status/',  // Update with your actual endpoint
-                    method: 'POST',
-                    data: {
-                        id: brandId,
-                        status: newStatus,
-                        csrfmiddlewaretoken: '{{ csrf_token }}'  // Include CSRF token
-                    },
-                    success: function(response) {
-                        console.log('Status updated successfully:', response);
-                    },
-                    error: function(xhr) {
-                        console.error('Error updating status:', xhr.responseText);
-                        // Optionally, revert the UI changes if the AJAX request fails
-                        $row.data("status", currentStatus); // Revert back to old status
-                        $(this).find("i").toggleClass("fa-arrow-down fa-arrow-up");
-                        $row.find(".status").text(currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1));
-                        // Revert button color
-                        if (currentStatus === "listed") {
-                            $(this).css("background-color", "#28a745");
-                        } else {
-                            $(this).css("background-color", "#c92a2a");
-                        }
-                    }
+                toggleButton.addEventListener('click', function() {
+                    sidebar.classList.toggle('expanded'); // Toggle the 'expanded' class on the sidebar
+                    mainContent.classList.toggle('expanded'); // Toggle the 'expanded' class on the main content
                 });
             });
             
-            $(document).on("click", ".btn-edit", function () {
-                console.log("Edit button clicked");
-                var $row = $(this).closest("tr");
-                $("#editBrandId").val($row.data("id"));
-                $("#editBrandName").val($row.find("td:eq(1)").text());
-                $("#editBrandCountry").val($row.find("td:eq(3)").text());
-                $("#editBrandStatus").val($row.data("status"));
-    
-                  var imageUrl = $row.data("image");
-                  console.log('hiiii')
-                
-                $("#imagePreview").attr("src", imageUrl).show(); // Set image and show it
-                   
-                $("#editBrandModal").modal("show");
-            });
             
-            document.getElementById('editBrandForm').addEventListener('submit', function (e) {
-                e.preventDefault(); // Prevent default form submission
             
-                // Initialize cropper if needed and get cropped image blob
-                const canvas = cropper.getCroppedCanvas(); // Assuming cropper is defined
-                canvas.toBlob(function (blob) {
-                    const formData = new FormData();
-                    formData.append('image', blob);
-                    formData.append('brand_name', document.getElementById('editBrandName').value);
-                    formData.append('country', document.getElementById('editBrandCountry').value);
-                    formData.append('id', document.getElementById('editBrandId').value);
             
-                    $.ajax({
-                        url: '/management/update-brand/', // Update this to your actual endpoint
-                        method: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            console.log('Success:', response);
-                            $('#editBrandModal').modal('hide'); // Hide the modal on success
-                            location.reload(); // Reload page on success
-                        },
-                        error: function(xhr) {
-                            console.error('Error:', xhr.responseText);
-                        }
-                    });
-                }, 'image/jpeg');
-            });
             
-            function openEditBrandModal(brand) {
-                document.getElementById('editBrandId').value = brand.id;
-                document.getElementById('editBrandName').value = brand.brand_name;
-                document.getElementById('editBrandCountry').value = brand.country;
-            
-                // Optional: Load the existing image into the cropper
-                if (cropper) {
-                    cropper.destroy(); // Destroy previous cropper instance if any
-                }
-                const imageElement = document.getElementById('editBrandImagePreview'); // Create this element to show the image
-                imageElement.src = brand.image; // Set existing image source
-                cropper = new Cropper(imageElement, {
-                    aspectRatio: 1,
-                    // Add other cropper options if necessary
-                });
-            
-                $('#editBrandModal').modal('show'); // Show the modal
-            }
-            
+ //            
+ //           $("#filter").on("change", function () {
+ //               var filterValue = $(this).val();
+ //               $("#productTable tr").each(function () {
+ //                   $(this).toggle(filterValue === "all" || $(this).data("status") === filterValue);
+ //               });
+ //           });
+ //   
+ //           // Handle status toggle and editing
+ //           $(document).on("click", ".toggle-status", function () {
+ //               var $row = $(this).closest("tr");
+ //               var brandId = $row.data("id");
+ //               var currentStatus = $row.data("status");
+ //               var newStatus = currentStatus === "listed" ? "unlisted" : "listed";
+ //           
+ //               // Update the UI immediately for better user experience
+ //               $row.data("status", newStatus);
+ //               $(this).find("i").toggleClass("fa-arrow-down fa-arrow-up");
+ //           
+ //               // Change the status text and button color based on the new status
+ //               if (newStatus === "listed") {
+ //                   $row.find(".status").text("Listed").css("color", "green");
+ //                    $(this).css({
+ //                       "background-color": "#28a745",
+ //                       "font-weight": "bold"
+ //                   });// Green for listed
+ //               } else {
+ //                   $row.find(".status").text("Unlisted").css("color", "red");
+ //                   $(this).css({
+ //                       "background-color": "#c92a2a",
+ //                       "font-weight": "bold"
+ //                   }); // Red for unlisted
+ //               }
+ //           
+ //                
+ //           //    $.ajax({
+ //           //        url: '/management/toggle-status/',  // Update with your actual endpoint
+ //           //        method: 'POST',
+ //           //        data: {
+ //           //            id: brandId,
+ //           //            status: newStatus,
+ //           //            csrfmiddlewaretoken: '{{ csrf_token }}'  // Include CSRF token
+ //           //        },
+ //           //        success: function(response) {
+ //           //            console.log('Status updated successfully:', response);
+ //           //        },
+ //           //        error: function(xhr) {
+ //           //            console.error('Error updating status:', xhr.responseText);
+ //           //            // Optionally, revert the UI changes if the AJAX request fails
+ //           //            $row.data("status", currentStatus); // Revert back to old status
+ //           //            $(this).find("i").toggleClass("fa-arrow-down fa-arrow-up");
+ //           //            $row.find(".status").text(currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1));
+ //           //            // Revert button color
+ //           //            if (currentStatus === "listed") {
+ //           //                $(this).css("background-color", "#28a745");
+ //           //            } else {
+ //           //                $(this).css("background-color", "#c92a2a");
+ //           //            }
+ //           //        }
+ //           //    });
+ //           //});
+ //         
+ //           $(document).on("click", ".btn-edit", function () {
+ //               console.log("Edit button clicked");
+ //               var $row = $(this).closest("tr");
+ //               $("#editBrandId").val($row.data("id"));
+ //               $("#editBrandName").val($row.find("td:eq(1)").text());
+ //               $("#editBrandCountry").val($row.find("td:eq(3)").text());
+ //               $("#editBrandStatus").val($row.data("status"));
+ //   
+ //                 var imageUrl = $row.data("image");
+ //                 console.log('hiiii')
+ //               
+ //               $("#imagePreview").attr("src", imageUrl).show(); // Set image and show it
+ //                  
+ //               $("#editBrandModal").modal("show");
+ //           });
+ //           
+ //           document.getElementById('editBrandForm').addEventListener('submit', function (e) {
+ //               e.preventDefault(); // Prevent default form submission
+ //           
+ //               // Initialize cropper if needed and get cropped image blob
+ //               const canvas = cropper.getCroppedCanvas(); // Assuming cropper is defined
+ //               canvas.toBlob(function (blob) {
+ //                   const formData = new FormData();
+ //                   formData.append('image', blob);
+ //                   formData.append('brand_name', document.getElementById('editBrandName').value);
+ //                   formData.append('country', document.getElementById('editBrandCountry').value);
+ //                   formData.append('id', document.getElementById('editBrandId').value);
+ //           
+ //                   $.ajax({
+ //                       url: '/management/update-brand/', // Update this to your actual endpoint
+ //                       method: 'POST',
+ //                       data: formData,
+ //                       processData: false,
+ //                       contentType: false,
+ //                       success: function(response) {
+ //                           console.log('Success:', response);
+ //                           $('#editBrandModal').modal('hide'); // Hide the modal on success
+ //                           location.reload(); // Reload page on success
+ //                       },
+ //                       error: function(xhr) {
+ //                           console.error('Error:', xhr.responseText);
+ //                       }
+ //                   });
+ //               }, 'image/jpeg');
+ //           });
+ //           
+ //           function openEditBrandModal(brand) {
+ //               document.getElementById('editBrandId').value = brand.id;
+ //               document.getElementById('editBrandName').value = brand.brand_name;
+ //               document.getElementById('editBrandCountry').value = brand.country;
+ //           
+ //               // Optional: Load the existing image into the cropper
+ //               if (cropper) {
+ //                   cropper.destroy(); // Destroy previous cropper instance if any
+ //               }
+ //               const imageElement = document.getElementById('editBrandImagePreview'); // Create this element to show the image
+ //               imageElement.src = brand.image; // Set existing image source
+ //               cropper = new Cropper(imageElement, {
+ //                   aspectRatio: 1,
+ //                   // Add other cropper options if necessary
+ //               });
+ //           
+ //               $('#editBrandModal').modal('show'); // Show the modal
+ //           }
+ //           
+//
+ //           // Add brand functionality
+ //           $("#addBrandForm").on("submit", function (e) {
+ //               e.preventDefault();
+ //               var formData = new FormData(this);
+ //               $.ajax({
+ //                   url: '/management/add-brand/',
+ //                   method: 'POST',
+ //                   data: formData,
+ //                   processData: false,
+ //                   contentType: false,
+ //                   success: function(response) {
+ //                          
+ //                       
+ //                       
+ //                       $("#addBrandForm")[0].reset();
+ //                       $("#addProductModal").modal("hide");
+ //                       location.reload();
+ //                   },
+ //                   error: function(xhr) {
+ //                       console.error(xhr.responseText);
+ //                   }
+ //               });
+ //           });
+ //   
+ //           // Delete functionality
+ //           $(document).on("click", ".delete", function () {
+ //               $(this).closest("tr").remove();
+ //           });
+ //   
+ //           // AJAX setup for CSRF token
+ //           function getCookie(name) {
+ //               let cookieValue = null;
+ //               if (document.cookie && document.cookie !== '') {
+ //                   const cookies = document.cookie.split(';');
+ //                   for (let i = 0; i < cookies.length; i++) {
+ //                       const cookie = cookies[i].trim();
+ //                       if (cookie.substring(0, name.length + 1) === (name + '=')) {
+ //                           cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+ //                           break;
+ //                       }
+ //                   }
+ //               }
+ //               return cookieValue;
+ //           }
+ //   
+ //           $.ajaxSetup({
+ //               headers: {
+ //                   'X-CSRFToken': getCookie('csrftoken')
+ //               }
+ //           });
+//
+//
 
-            // Add brand functionality
-            $("#addBrandForm").on("submit", function (e) {
-                e.preventDefault();
-                var formData = new FormData(this);
+  $(document).ready(function() {
+    $('.edit-button').on('click', function() {
+        var brandId = $(this).data('id'); // Get the ID
+        $('#editBrandId').val(brandId); // Set the hidden input's value
+    });
+
+    let cropper;
+    const imagePreview = document.getElementById('imagePreview');
+    const inputImage = document.getElementById('editBrandImage');
+
+    inputImage.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                imagePreview.src = event.target.result;
+                imagePreview.style.display = 'block';
+
+                // Destroy existing cropper if any
+                if (cropper) {
+                    cropper.destroy();
+                }
+
+                // Initialize new cropper
+                cropper = new Cropper(imagePreview, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                });
+            };
+            reader.readAsDataURL(files[0]);
+        }
+    });
+
+    // Form submission logic
+    document.getElementById('editBrandForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        if (cropper) {
+            const canvas = cropper.getCroppedCanvas({
+                width: 300,
+                height: 300
+            });
+            canvas.toBlob(function(blob) {
+                const formData = new FormData();
+                formData.append('image', blob);
+                formData.append('brand_name', document.getElementById('editBrandName').value);
+                formData.append('country', document.getElementById('editBrandCountry').value);
+                formData.append('id', $('#editBrandId').val()); // Get the brand ID
+
+                const url = '/management/edit-brand/' + $('#editBrandId').val() + '/'; // Construct the URL
+
+                // AJAX request
                 $.ajax({
-                    url: '/management/add-brand/',
+                    url: url,
                     method: 'POST',
                     data: formData,
                     processData: false,
                     contentType: false,
                     success: function(response) {
-                           
-                        
-                        
-                        $("#addBrandForm")[0].reset();
-                        $("#addProductModal").modal("hide");
-                        location.reload();
+                        console.log('Image uploaded successfully');
+                        location.reload(); // Optionally reload the page
                     },
                     error: function(xhr) {
-                        console.error(xhr.responseText);
+                        console.error('Error:', xhr.status, xhr.responseText);
                     }
                 });
             });
-    
-            // Delete functionality
-            $(document).on("click", ".delete", function () {
-                $(this).closest("tr").remove();
-            });
-    
-            // AJAX setup for CSRF token
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-    
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            });
-
-
-            let cropper;
-            const imagePreview = document.getElementById('imagePreview');
-            const inputImage = document.getElementById('editBrandImage');
-            
-            inputImage.addEventListener('change', function (e) {
-                const files = e.target.files;
-                if (files && files.length > 0) {
-                    const reader = new FileReader();
-                    reader.onload = function (event) {
-                        imagePreview.src = event.target.result;
-                        imagePreview.style.display = 'block';
-            
-                        // Destroy existing cropper if any
-                        if (cropper) {
-                            cropper.destroy();
-                        }
-            
-                        // Initialize new cropper
-                        cropper = new Cropper(imagePreview, {
-                            aspectRatio: 1, // Set your desired aspect ratio
-                            viewMode: 1,
-                        });
-                    };
-                    reader.readAsDataURL(files[0]);
-                }
-            });
-            
-            // Zoom In
-            document.getElementById('zoomIn').addEventListener('click', function () {
-                if (cropper) {
-                    cropper.zoom(0.1);
-                }
-            });
-            
-            // Zoom Out
-            document.getElementById('zoomOut').addEventListener('click', function () {
-                if (cropper) {
-                    cropper.zoom(-0.1);
-                }
-            });
-            
-            // Reset Crop
-            document.getElementById('resetCrop').addEventListener('click', function () {
-                if (cropper) {
-                    cropper.reset();
-                }
-            });
-            
-            // On form submission, get cropped image data
-            document.getElementById('editBrandForm').addEventListener('submit', function (e) {
-                e.preventDefault();
-            
-                if (cropper) {
-                    const canvas = cropper.getCroppedCanvas({
-                        width: 300, // Set desired width
-                        height: 300 // Set desired height
-                    });
-                    canvas.toBlob(function (blob) {
-                        const formData = new FormData();
-                        formData.append('image', blob);
-                        formData.append('brand_name', document.getElementById('editBrandName').value);
-                        formData.append('country', document.getElementById('editBrandCountry').value);
-                        formData.append('id', document.getElementById('editBrandId').value);
-            
-                        // Send cropped image and other data to the server
-                        $.ajax({
-                            url: '/your/update/endpoint/',  // Replace with your endpoint
-                            method: 'POST',
-                            data: formData,
-                            processData: false,
-                            contentType: false,
-                            success: function(response) {
-                                // Handle success
-                                console.log('Image uploaded successfully');
-                                location.reload(); // Optionally reload the page
-                            },
-                            error: function(xhr) {
-                                console.error(xhr.responseText);
-                            }
-                        });
-                    });
-                }
-            });
-            
-        </script>
+        }
+    });
+});
+           
+    </script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
     </div>

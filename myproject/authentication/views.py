@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,get_object_or_404
 from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login
 from django.contrib import messages
@@ -14,6 +14,7 @@ from django.views.decorators.csrf import csrf_protect
 import random
 from django.views.decorators.csrf import csrf_exempt
 import time
+from django.contrib.auth import logout
 from django.contrib.auth import password_validation
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.backends import ModelBackend
@@ -21,14 +22,50 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.urls import reverse
+from management.models import Product
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.views.generic import TemplateView
+from django.contrib import messages
+
+
+
 # from .views import custom_logout
+
+
+
+from django.contrib import messages
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+
+def admin_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        # Authenticate the user
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            if user.is_superuser:  # Check if the user is a superuser
+                login(request, user)
+                messages.success(request, 'Login successful!')
+                return redirect('users')  # Redirect to your admin dashboard
+            else:
+                messages.error(request, 'You do not have permission to access this area.')
+                return redirect('admin_login')  # Redirect back to login
+         
+
+    # Render the login page if GET request or invalid login
+    return render(request, 'adminside/login1.html')
+
 # Create your views here.
 def generate_otp():
     return str(random.randint(100000, 999999))
 
 def usersignup(request):
-    # if request.user.is_authenticated:
-    #     return redirect('home')
+    if request.user.is_authenticated:
+        return redirect('users')
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
@@ -59,7 +96,7 @@ def usersignup(request):
             try:
                 send_mail(subject, message, from_email, [email])
                 # Store OTP and user data in session for verification
-                request.session['otp'] = otp
+                request.session['otp'] = otp 
                 request.session['otp_generated_time'] = time.time()  # Store the current time
                 request.session['otp_expiration_time'] = 300
                 request.session['resend_otp_time'] = 30   
@@ -74,11 +111,15 @@ def usersignup(request):
 
 
 @csrf_protect
+# def verify_otp(request):
 def verify_otp(request):
-    # if request.user.is_authenticated:
-    #     return redirect('home')
+    # Check if the user is already authenticated
+    if request.user.is_authenticated:
+        return redirect('home')
+
+    # Handle POST request to verify OTP
     if request.method == 'POST':
-        # Retrieve the OTP inputs and handle None values
+        # Retrieve the OTP inputs and filter out None values
         otp_inputs = [
             request.POST.get('otp_1'),
             request.POST.get('otp_2'),
@@ -88,30 +129,37 @@ def verify_otp(request):
             request.POST.get('otp_6'),
         ]
         
-        # Filter out None values and join the remaining strings
+        # Join the remaining strings to form the entered OTP
         entered_otp = ''.join(filter(None, otp_inputs))
         
-        generated_otp = request.session.get('otp') 
+        # Retrieve the generated OTP and user data from the session
+        generated_otp = request.session.get('otp')
         user_data = request.session.get('user_data')
-        print('genereted otp :',generated_otp)
-        print('entered_otp :',entered_otp)
+
+        # Debug prints
+        print('Generated OTP:', generated_otp)
+        print('Entered OTP:', entered_otp)
         
-         # Check OTP expiration
-         
-           # Check OTP expiration
+        # Check OTP expiration
         otp_generated_time = request.session.get('otp_generated_time')
-        otp_expiration_time = request.session.get('otp_expiration_time', 0)
+        otp_expiration_time = request.session.get('otp_expiration_time', 300)  # Default to 5 minutes
         current_time = time.time()
 
+        # Check if the OTP has been generated
+        if otp_generated_time is None:
+            messages.error(request, 'No OTP generated. Please request a new one.')
+            return redirect('request_otp')  # Redirect to where the OTP can be requested
+
+        # Check if the current time exceeds the expiration time
         if current_time - otp_generated_time > otp_expiration_time:
             messages.error(request, 'Your OTP has expired. Please request a new one.')
             return render(request, 'userside/otp.html', context={'otp_form': True})
 
-        
         # Check if the entered OTP matches the generated OTP
         if entered_otp == generated_otp:
-            print('genereted otp :',generated_otp)
-            print('entered_otp :',entered_otp)
+            print('Valid OTP:', entered_otp)
+
+            # Check if user data exists in session
             if user_data:
                 # Create a new user instance
                 user = User(username=user_data['username'], email=user_data['email'])
@@ -119,30 +167,29 @@ def verify_otp(request):
 
                 try:
                     # Validate and save the user
-                    user.full_clean()
-                    user.save()
+                    user.full_clean()  # Validate user fields
+                    user.save()  # Save the user to the database
                     messages.success(request, 'Account created successfully!')
-                    
+
                     # Log the user in
-                    login(request, user)
-                    
+                    login(request, user, backend='allauth.account.auth_backends.AuthenticationBackend')
+
                     # Clear session data after successful registration
                     del request.session['otp']
                     del request.session['user_data']
-                    return redirect('userlogin') # Redirect to the dashboard or home page
+                    return redirect('userlogin')  # Redirect to the dashboard or home page
                 except ValidationError as e:
                     messages.error(request, f'Error creating account: {str(e)}')
             else:
                 messages.error(request, 'User data not found in session.')
         else:
-            messages.error(request, 'Invalid OTP or expired OTP Please try again.')
-        
+            messages.error(request, 'Invalid OTP or expired OTP. Please try again.')
+
         # Render the same template with an error message
         return render(request, 'userside/otp.html', context={'otp_form': True})
 
     # Handle GET requests
     return render(request, 'userside/otp.html', context={'otp_form': True})
-
 @csrf_exempt  # Use with caution; better to handle CSRF properly
 def resend_otp(request):
     if request.method == 'POST':
@@ -182,8 +229,8 @@ def resend_otp(request):
 
 
 def userlogin(request):
-    # if request.user.is_authenticated:
-    #     return redirect('app1:home')
+    if request.user.is_authenticated:
+        return redirect('home')
 
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -229,4 +276,64 @@ def custom_logout(request):
     return redirect(reverse( 'custom_login' )) 
 
 def home(request):
-    return render(request,'userside/home.html')
+    products=Product.objects.all()
+    
+    context={
+        'products':products
+    }
+    return render(request,'userside/home.html',context)
+
+@login_required
+def userproducts(request):
+    
+    products=Product.objects.all()
+    
+    context={
+        'products':products
+    }
+    
+    return render(request,'userside/products.html',context)
+
+@login_required
+def singleproduct(request,id):
+    product = get_object_or_404(Product, id=id)
+    products = Product.objects.exclude(id=id)[:6]   
+    context = {
+        'product': product,
+        'products':products
+    }
+    
+    return render(request,'userside/singleproduct.html',context)
+
+def custom_logout(request):
+    logout(request)  # Log the user out
+    request.session.flush()  # Clear the session data
+    return redirect('home')
+
+def restricted_view(request):
+    # Check if the user is authenticated
+    if not request.user.is_authenticated:
+        messages.info(request, "Please log in to access this page.")
+        return redirect('custom_login')  # Redirect to login if not authenticated
+    return render(request, 'restricted.html') 
+
+
+class AdminRequiredMixin(UserPassesTestMixin):
+    """Mixin to restrict access to admin users."""
+    def test_func(self):
+        if self.request.user.is_superuser:
+            return True
+        else:
+            messages.error(self.request, "You do not have permission to access this area.")
+            return False
+
+class AdminHomeView(AdminRequiredMixin, TemplateView):
+    template_name = 'adminside/users.html'
+
+    def handle_no_permission(self):
+        return redirect('admin_login')  # Redirect to admin login if not permitted
+    
+def custom_logoutadmin(request):
+    logout(request)  # Log the user out
+    messages.success(request, "You have been logged out successfully.")  # Optional: Add a success message
+    return redirect('admin_login') 
