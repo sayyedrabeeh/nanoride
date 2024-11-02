@@ -8,6 +8,7 @@
     <title>Product Variants View</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/cropperjs/dist/cropper.css">
     <style>
         body {
             background-color: #f7f7f7;
@@ -55,6 +56,51 @@
         .image-row {
             margin-bottom: 20px;
         }
+
+        .custom-modal-dialog {
+            max-width: 800px; /* Adjust the width as needed */
+            width: 100%; /* Ensures it fills the container */
+        }
+        
+        @media (max-width: 768px) {
+            .custom-modal-dialog {
+                max-width: 90%; /* Use a smaller width on mobile devices */
+            }
+        }
+        #previewContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Increase min size for larger images */
+            gap: 15px; /* Increase space between images */
+            margin-bottom: 20px; /* Space below the container */
+            padding: 10px; /* Padding inside the container */
+            border: 1px solid #ccc; /* Optional: border for visibility */
+        }
+        
+        #previewContainer img {
+            width: 100%; /* Full width of the grid cell */
+            height: 250px; /* Increased height for larger previews */
+            object-fit: cover; /* Maintain aspect ratio */
+            border-radius: 8px; /* Slightly rounded corners */
+            transition: transform 0.2s; /* Smooth hover effect */
+        }
+        
+        #previewContainer img:hover {
+            transform: scale(1.1); /* Slightly enlarge image on hover */
+        }
+        
+        .custom-modal-dialog {
+            max-width: 800px; /* Adjust the width as needed */
+            width: 100%; /* Ensures it fills the container */
+        }
+        
+        @media (max-width: 768px) {
+            .custom-modal-dialog {
+                max-width: 90%; /* Use a smaller width on mobile devices */
+            }
+        }
+        
+        
+
     </style>
 </head>
 
@@ -64,16 +110,21 @@
         <h1>Product Variants Details for {{ product.name }}</h1>
 
         <!-- Button to Add Variant -->
-        <button class="btn btn-primary btn-add-variant" 
-        data-toggle="modal" 
-        data-target="#addVariantModal" 
-        onclick="window.location.href='{% url 'add_variant' product.id %}'">
-    Add Variant
-</button>
+        <button class="btn btn-primary" data-toggle="modal" data-target="#addVariantModal">
+            Add Variant
+        </button>
+        <div class="modal-body">
+            {% if messages %}
+                 
+                    {% for message in messages %}
+                        <div>{{ message }}</div>
+                    {% endfor %}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                
+            {% endif %}
 
-        <!-- Row for displaying images -->
-        
-        </div>
         <div class="table-responsive">
             <table class="table table-bordered">
                 <thead>
@@ -84,195 +135,386 @@
                         <th>Type</th>
                         <th>Stock</th>
                         <th>Price</th>
+                        <th>id</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for variant in variants %}
-                        <tr>
-                            <td>
-                                <div class="d-flex justify-content-between">
-                                    <img src="{{ variant.image1.url }}" alt="Variant Image" style="width: 70px; height: 70px;">
-                                    <img src="{{ variant.image2.url }}" alt="Variant Image" style="width: 70px; height: 70px;">
-                                    <img src="{{ variant.image3.url }}" alt="Variant Image" style="width: 70px; height: 70px;">
-                                    <img src="{{ variant.image4.url }}" alt="Variant Image" style="width: 70px; height: 70px;">
-                                </div>
-                            </td>
-                            <td>{{ variant.colour }}</td>
-                            <td>{{ variant.size }}</td>
-                            <td>{{ variant.type1 }}</td>
-                            <td>{{ variant.stock }}</td>
-                            <td>{{ variant.price }}</td>
-                            <td>
-                                <!-- Button to Edit Variant -->
-                                <a href="{% url 'edit_variant' product.id variant.id %}" 
-                                class="btn btn-warning btn-edit-variant" 
-                                data-toggle="modal" 
-                                data-target="#editVariantModal">
-                                 Edit
-                             </a>
-                             </td>
-                        </tr>
+                    <tr>
+                        <td>
+                            {% for image in variant.images.all %}  <!-- Using the related name for accessing images -->
+                                <img src="{{ image.image.url }}" alt="Variant Image" style="max-height: 100px; margin-right: 5px;">
+                            {% empty %}
+                                <p>No images available</p>
+                            {% endfor %}
+                        </td>
+                        <td>{{ variant.colour }}</td>
+                        <td>{{ variant.size }}</td>
+                        <td>{{ variant.type1 }}</td>
+                        <td>{{ variant.stock }}</td>
+                        <td>${{ variant.price }}</td>
+                        <td>{{ variant.id }}</td>
+                        <td>
+                            <!-- Button to Edit Variant -->
+                            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#editVariantModal" data-variant-id="{{ variant.id }}">
+                                Edit
+                            </button>
+                            
+                            <form action="{% url 'toggle_listing' variant.id %}" method="POST" style="display:inline;">
+                                {% csrf_token %}
+                                {% if variant.status == 'listed' %}
+                                    <button type="submit" class="btn btn-danger">Unlist</button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-success">List</button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">No variants available.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+    </div>
 
-    <!-- Add Variant Modal -->
-    <div class="modal fade" id="addVariantModal" tabindex="-1" role="dialog" aria-labelledby="addVariantModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addVariantModalLabel">Add New Variant</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <form method="POST" enctype="multipart/form-data" action="{% url 'add_variant' product.id %} ">
-                    {% csrf_token %}
-                    <div class="modal-body">
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="variantImage1">Image 1</label>
-                                <input type="file" class="form-control" id="variantImage1" name="image1" accept="image/*" required>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="variantImage2">Image 2</label>
-                                <input type="file" class="form-control" id="variantImage2" name="image2" accept="image/*" required>
-                            </div>
+   <!-- Add Variant Modal -->
+<div class="modal fade" id="addVariantModal" tabindex="-1" role="dialog" aria-labelledby="addVariantModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addVariantModalLabel">Add New Variant</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="addProductForm" method="POST" enctype="multipart/form-data" action="{% url 'add_variant' product.id %}">
+                <input type="hidden" id="productId" value="{{ product.id }}">
+                {% csrf_token %}
+                <div class="modal-body">
+
+                    
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label for="variantImages">Upload Images</label>
+                            <input type="file" class="form-control" id="additionalImage" name="additional_image" accept="image/*" required multiple>
+                            <small class="form-text text-muted">You can upload up to 4 images.</small>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="variantImage3">Image 3</label>
-                                <input type="file" class="form-control" id="variantImage3" name="image3" accept="image/*" required>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="variantImage4">Image 4</label>
-                                <input type="file" class="form-control" id="variantImage4" name="image4" accept="image/*" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="variantColor">Color</label>
-                            <select class="form-control" id="variantColor" name="colour" required>
+                    </div>
+                    <div id="previewContainer"></div> <!-- Container for image previews -->
+                    <div class="form-group">
+                        <label for="variantColor">Color</label>
+                        <div class="input-group">
+                            <select class="form-control" id="variantColor" name="colour">
+                                <option value="" disabled selected>Select Color</option>
                                 <option value="Red">Red</option>
                                 <option value="Blue">Blue</option>
                                 <option value="Green">Green</option>
                             </select>
+                            <button type="button" class="btn btn-secondary" id="addColorButton">Add</button>
                         </div>
-                        <div class="form-group">
-                            <label for="variantSize">Size</label>
-                            <select class="form-control" id="variantSize" name="size" required>
+                        <input type="text" id="newColorInput" class="form-control mt-2" style="display:none;" placeholder="Enter new color">
+                        <button type="button" id="submitNewColor" class="btn btn-primary mt-2" style="display:none;">Add Color</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="variantSize">Size</label>
+                        <div class="input-group">
+                            <select class="form-control" id="variantSize" name="size">
+                                <option value="" disabled selected>Select Size</option>
                                 <option value="S">S</option>
                                 <option value="M">M</option>
                                 <option value="L">L</option>
                                 <option value="XL">XL</option>
                             </select>
+                            <button type="button" class="btn btn-secondary" id="addSizeButton">Add</button>
                         </div>
-                        <div class="form-group">
-                            <label for="variantType">Type</label>
-                            <select class="form-control" id="variantType" name="type1" required>
+                        <input type="text" id="newSizeInput" class="form-control mt-2" style="display:none;" placeholder="Enter new size">
+                        <button type="button" id="submitNewSize" class="btn btn-primary mt-2" style="display:none;">Add Size</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="variantType">Type</label>
+                        <div class="input-group">
+                            <select class="form-control" id="variantType" name="type1">
+                                <option value="" disabled selected>Select Type</option>
                                 <option value="Plastic">Plastic</option>
                                 <option value="Alloy">Alloy</option>
                             </select>
+                            <button type="button" class="btn btn-secondary" id="addTypeButton">Add</button>
                         </div>
-                        <div class="form-group">
-                            <label for="variantStock">Stock</label>
-                            <input type="number" class="form-control" id="variantStock" name="stock" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="variantPrice">Price</label>
-                            <input type="number" class="form-control" id="variantPrice" name="price" required>
-                        </div>
+                        <input type="text" id="newTypeInput" class="form-control mt-2" style="display:none;" placeholder="Enter new type">
+                        <button type="button" id="submitNewType" class="btn btn-primary mt-2" style="display:none;">Add Type</button>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Variant</button>
+
+
+                    <div class="form-group">
+                        <label for="variantStock">Stock</label>
+                        <input type="number" class="form-control" id="variantStock" name="stock" required>
                     </div>
-                </form>
-            </div>
+                    <div class="form-group">
+                        <label for="variantPrice">Price</label>
+                        <input type="number" class="form-control" id="variantPrice" name="price" required step="0.01">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Variant</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
+{% for variant in variants %}
 
-    <div class="modal fade" id="editVariantModal" tabindex="-1" role="dialog" aria-labelledby="editVariantModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editVariantModalLabel">Edit Variant</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <form method="POST" enctype="multipart/form-data" action="{% url 'add_variant' product.id %} ">
-                    {% csrf_token %}
-                    <div class="modal-body">
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="variantImage1">Image 1</label>
-                                <input type="file" class="form-control" id="variantImage1" name="image1" accept="image/*">
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="variantImage2">Image 2</label>
-                                <input type="file" class="form-control" id="variantImage2" name="image2" accept="image/*">
-                            </div>
+<div class="modal fade" id="editVariantModal" tabindex="-1" role="dialog" aria-labelledby="editVariantModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editVariantModalLabel">Edit Variant</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+           
+    
+        {% comment %} <form method="POST" action="{% url 'edit_variant' product.id variant.id %}"> {% endcomment %}
+                 <form id="editVariantForm" method="POST" enctype="multipart/form-data" action="{% url 'edit_variant' product.id variant.id %}">
+                   
+           
+                <input type="hidden" id="productId" value="{{ product.id }}">
+                
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label for="variantImages">Upload Images</label>
+                            <input type="file" class="form-control" id="additionalImage" name="additional_image" accept="image/*" multiple>
+                            <small class="form-text text-muted">You can upload up to 4 images.</small>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="variantImage3">Image 3</label>
-                                <input type="file" class="form-control" id="variantImage3" name="image3" accept="image/*">
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="variantImage4">Image 4</label>
-                                <input type="file" class="form-control" id="variantImage4" name="image4" accept="image/*">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="variantColor">Color</label>
-                            <select class="form-control" id="variantColor" name="colour" required>
+                    </div>
+                    <div id="previewContainer"></div> <!-- Container for image previews -->
+                    
+                    <div class="form-group">
+                        <label for="variantColor">Color</label>
+                        <div class="input-group">
+                            <select class="form-control" id="variantColor" name="colour">
+                                <option value="" disabled>Select Color</option>
                                 <option value="Red" {% if variant.colour == 'Red' %}selected{% endif %}>Red</option>
                                 <option value="Blue" {% if variant.colour == 'Blue' %}selected{% endif %}>Blue</option>
                                 <option value="Green" {% if variant.colour == 'Green' %}selected{% endif %}>Green</option>
                             </select>
+                            <button type="button" class="btn btn-secondary" id="addColorButton">Add</button>
                         </div>
-                        <div class="form-group">
-                            <label for="variantSize">Size</label>
-                            <select class="form-control" id="variantSize" name="size" required>
+                        <input type="text" id="newColorInput" class="form-control mt-2" style="display:none;" placeholder="Enter new color">
+                        <button type="button" id="submitNewColor" class="btn btn-primary mt-2" style="display:none;">Add Color</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="variantSize">Size</label>
+                        <div class="input-group">
+                            <select class="form-control" id="variantSize" name="size">
+                                <option value="" disabled>Select Size</option>
                                 <option value="S" {% if variant.size == 'S' %}selected{% endif %}>S</option>
                                 <option value="M" {% if variant.size == 'M' %}selected{% endif %}>M</option>
                                 <option value="L" {% if variant.size == 'L' %}selected{% endif %}>L</option>
                                 <option value="XL" {% if variant.size == 'XL' %}selected{% endif %}>XL</option>
                             </select>
+                            <button type="button" class="btn btn-secondary" id="addSizeButton">Add</button>
                         </div>
-                        <div class="form-group">
-                            <label for="variantType">Type</label>
-                            <select class="form-control" id="variantType" name="type1" required>
+                        <input type="text" id="newSizeInput" class="form-control mt-2" style="display:none;" placeholder="Enter new size">
+                        <button type="button" id="submitNewSize" class="btn btn-primary mt-2" style="display:none;">Add Size</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="variantType">Type</label>
+                        <div class="input-group">
+                            <select class="form-control" id="variantType" name="type1">
+                                <option value="" disabled>Select Type</option>
                                 <option value="Plastic" {% if variant.type1 == 'Plastic' %}selected{% endif %}>Plastic</option>
                                 <option value="Alloy" {% if variant.type1 == 'Alloy' %}selected{% endif %}>Alloy</option>
                             </select>
+                            <button type="button" class="btn btn-secondary" id="addTypeButton">Add</button>
                         </div>
-                        <div class="form-group">
-                            <label for="variantStock">Stock</label>
-                            <input type="number" class="form-control" id="variantStock" name="stock" value="{{ variant.stock }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="variantPrice">Price</label>
-                            <input type="number" class="form-control" id="variantPrice" name="price" value="{{ variant.price }}" required>
-                        </div>
+                        <input type="text" id="newTypeInput" class="form-control mt-2" style="display:none;" placeholder="Enter new type">
+                        <button type="button" id="submitNewType" class="btn btn-primary mt-2" style="display:none;">Add Type</button>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Update Variant</button>
+
+                    <div class="form-group">
+                        <label for="variantStock">Stock</label>
+                        <input type="number" class="form-control" id="variantStock" name="stock" value="{{ variant.stock }}" required>
                     </div>
-                </form>
-            </div>
+                    <div class="form-group">
+                        <label for="variantPrice">Price</label>
+                        <input type="number" class="form-control" id="variantPrice" name="price" value="{{ variant.price }}" required step="0.01">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+            
         </div>
     </div>
+</div>
+{% endfor %}
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.15/cropper.min.js"></script>
+    <script src="https://unpkg.com/cropperjs/dist/cropper.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+<script>
+    let croppers = [];  // Array to store Cropper instances
+    let croppedImages = [];  // Array to store cropped image blobs
+    const previewContainer = document.getElementById('previewContainer');
+    const imagesInput = document.getElementById('additionalImage');
+    const productId = document.getElementById('productId').value;
+
+    
+    imagesInput.addEventListener('change', function(event) {
+        previewContainer.innerHTML = '';  // Clear previous previews
+        croppedImages = [];  // Clear previous cropped images
+        croppers = [];  // Clear previous Cropper instances
+    
+        const files = event.target.files;
+    
+        if (files && files.length > 0) {
+            Array.from(files).forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewDiv = document.createElement('div');
+                    const imgElement = document.createElement('img');
+    
+                    imgElement.src = e.target.result;
+                    imgElement.alt = 'Image Preview';
+                    imgElement.style.maxWidth = '300px';
+                    imgElement.style.maxHeight = '300px';
+                    imgElement.style.cursor = 'pointer';
+                    imgElement.style.border = '2px solid #ccc';
+                    imgElement.style.margin = '10px';
+    
+    
+                    previewDiv.appendChild(imgElement);
+                    previewContainer.appendChild(previewDiv);
+    
+                    // Initialize Cropper for this image
+                    const cropper = new Cropper(imgElement, {
+                        aspectRatio: 1,  // Adjust as needed
+                        viewMode: 3,
+                    });
+    
+                    croppers.push(cropper);  // Store cropper instance
+                };
+                reader.readAsDataURL(file);  // Load the file
+            });
+        }
+    });
+    
+    // Handle form submission and cropping
+    document.getElementById('addProductForm').addEventListener('submit', function(event) {
+        event.preventDefault();  // Prevent form submission before cropping is done
+    
+        const croppedPromises = croppers.map((cropper, index) => {
+            return new Promise((resolve) => {
+                cropper.getCroppedCanvas().toBlob(function(blob) {
+                    if (blob) {
+                        croppedImages.push(blob);
+                        resolve();
+                    } else {
+                        console.error('Failed to create blob from cropped canvas');
+                        resolve();  // Resolve even if blob creation fails to avoid hanging
+                    }
+                });
+            });
+        });
+    
+        // Wait for all images to be cropped
+        Promise.all(croppedPromises).then(() => {
+            const formData = new FormData(event.target);  // Include existing form data
+    
+            // Append each cropped image to formData
+            croppedImages.forEach((blob, index) => {
+                formData.append(`additional_image_${index}`, blob, `cropped-image-${index}.png`);
+            });
+    
+            // Finally, submit the form
+            fetch(event.target.action, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                window.location.href = `/management/products/${productId}/variants/`; // Redirect or update UI
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+
+
+
+    // Function to add new options to select elements
+function setupDynamicAddButton(selectId, inputId, buttonId, submitButtonId) {
+    document.getElementById(buttonId).addEventListener('click', function() {
+        // Hide the dropdown and show the input field
+        document.getElementById(selectId).style.display = 'none';
+        document.getElementById(inputId).style.display = 'block';
+        document.getElementById(submitButtonId).style.display = 'block';
+    });
+
+    document.getElementById(submitButtonId).addEventListener('click', function() {
+        const newValue = document.getElementById(inputId).value.trim();
+        if (newValue) {
+            // Create a new option and add it to the dropdown
+            const newOption = document.createElement('option');
+            newOption.value = newValue;
+            newOption.text = newValue;
+            document.getElementById(selectId).add(newOption);
+
+            // Reset the input field and dropdown
+            document.getElementById(inputId).value = '';
+            document.getElementById(inputId).style.display = 'none';
+            document.getElementById(submitButtonId).style.display = 'none';
+            document.getElementById(selectId).style.display = 'block';
+        } else {
+            alert("Please enter a valid value.");
+        }
+    });
+}
+
+// Set up dynamic adding for each field
+setupDynamicAddButton('variantColor', 'newColorInput', 'addColorButton', 'submitNewColor');
+setupDynamicAddButton('variantSize', 'newSizeInput', 'addSizeButton', 'submitNewSize');
+setupDynamicAddButton('variantType', 'newTypeInput', 'addTypeButton', 'submitNewType');
+
+    </script>
     
 
     <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
 </body>
 
 </html>

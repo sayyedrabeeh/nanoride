@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questions Table</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    
+    <style>
+        /* Basic reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            color: #333;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            padding: 20px 0;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            transition: width 0.3s;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #00a7eb;
+        }
+
+        .sidebar-content a {
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            transition: background 0.3s;
+            font-size: 1em;
+        }
+
+        .sidebar-content a:hover {
+            background: #00a7eb;
+        }
+
+        .sidebar-content i {
+            margin-right: 10px;
+        }
+
+        /* Main content styling */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: margin-left 0.3s;
+            width: calc(100% - 250px);
+        }
+
+        /* Filter and Sort Bar */
+        .filter-sort-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-sort-bar select,
+        .filter-sort-bar input[type="search"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        /* Table styling */
+        .table-wrapper {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Button styling */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            margin-right: 10px; /* Space between buttons */
+        }
+
+        .btn.submit { background-color: #28a745; }
+        .btn.send { background-color: #007bff; }
+
+        /* Modal styling */
+        #answer {
+            width: 100%; /* Full width */
+            height: 150px; /* Increased height */
+            padding: 10px; /* Padding for better appearance */
+            border: 1px solid #ccc; /* Border style */
+            border-radius: 4px; /* Rounded corners */
+            resize: none; /* Prevent resizing */
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title" style='color: wheat;font-size: 35px;font-weight: 900;'>NANORIDE</span>
+        </div>
+        
+        <div class="sidebar-content">
+            <a href="{% url 'custom_logout1' %}"><h5>Log Out</h5></a> 
+            <a href=" " id="dashboard"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+            <a href="{% url 'users' %} " id="customers"><i class="fas fa-users active"></i><span>Customers</span></a>
+            <a href="{% url 'products' %}"><i class="fas fa-box"></i><span>Product</span></a>
+            <a href=" " id="orders"><i class="fas fa-shopping-cart"></i><span>Orders</span></a>
+            <a href=" " id="offer"><i class="fas fa-tag"></i><span>Offer</span></a>
+            <a href="{% url 'brand' %}" id="brand"class="active"><i class="fas fa-th"></i><span>Brand</span></a>
+            <a href="{% url 'add_category_view' %}" id="category"><i class="fas fa-folder"></i><span>Category</span></a>
+            <a href=" " id="report"><i class="fas fa-chart-line"></i><span>Report</span></a>
+            <a href="{% url 'Edition' %}" id="edition"><i class="fas fa-book"></i><span>Edition</span></a>
+            <a href="{% url 'type1' %}"><i class="fas fa-cogs"></i><span>Type</span></a>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="filter-sort-bar">
+            <select id="filter">
+                <option value="all">All</option>
+                <option value="listed">Listed</option>
+                <option value="delisted">Delisted</option>
+            </select>
+            <select id="sort">
+                <option value="name">Sort by Name</option>
+                <option value="date">Sort by Date</option>
+            </select>
+            <input type="search" placeholder="Search questions...">
+        </div>
+        
+         
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Product Name</th>
+                        <th>Username</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for question in questions %}
+                    <tr>
+                        <td>{{ question.question }}</td>
+                        <td>{{ question.product.name }}</td> <!-- Display product name here -->
+                        <td>{{ question.email }}</td>
+                        <td>{{ question.status }}</td>
+                        <td>
+                            <form method="POST" action="{% url 'question' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="question_id" value="{{ question.id }}">
+                                <button type="submit" class="btn submit" name="action" value="answer">
+                                    Answer
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if question_to_answer %}
+        <div class="modal show" style="display:block;" id="exampleModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Question</h5>
+                    <form method="POST" action="{% url 'question' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="close">
+                        <button type="submit" class="close-btn" aria-label="Close">&times;</button>
+                    </form>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'question' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="question_id" value="{{ question_to_answer.id }}">
+                        <p>Please answer the following question:</p>
+                        <div class="form-group">
+                            <label for="username">User Email</label>
+                            <input type="text" class="form-control" value="{{ question_to_answer.email }}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="product_name">Product Name</label>
+                            <input type="text" class="form-control" value="{{ question_to_answer.product.name }}" readonly> <!-- Display product name here -->
+                        </div>
+                        <div class="form-group">
+                            <label for="question">Your Question</label>
+                            <textarea class="form-control" rows="3" readonly>{{ question_to_answer.question }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="answer">Your Answer</label>
+                            <textarea class="form-control" name="answer" rows="3" placeholder="Enter your answer"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary" name="action" value="submit_answer">Submit</button>
+                            <button type="submit" class="btn btn-success" name="action" value="send_privately">Send Privately</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+    </div>
+</body>
+</html>

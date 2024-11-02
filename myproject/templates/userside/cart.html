@@ -1,0 +1,218 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - NANORIDE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&display=swap">
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #e0f7e8;
+            font-family: 'Creepster', cursive;
+        }
+
+        /* Cart Container */
+        .cart-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #1b1b1b;
+            border-radius: 8px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .cart-title {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #e0f7e8;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-image {
+            width: 80px;
+            height: 80px;
+            background-color: #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #e0f7e8;
+        }
+
+        .cart-item-details {
+            flex-grow: 1;
+            margin-left: 20px;
+        }
+
+        .cart-item-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e0f7e8;
+        }
+
+        .cart-item-price {
+            font-size: 16px;
+            color: #e0f7e8;
+        }
+
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .cart-item-quantity {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+            color: #e0f7e8;
+        }
+
+        .quantity-btn {
+            background-color: #333;
+            color: #e0f7e8;
+            border: none;
+            padding: 5px 10px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .quantity-input {
+            width: 40px;
+            text-align: center;
+            background: none;
+            border: none;
+            color: #e0f7e8;
+            font-size: 18px;
+        }
+
+        .remove-btn {
+            color: #ff6b6b;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            margin-left: 10px;
+        }
+
+        /* Cart Summary */
+        .cart-summary {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+            color: #e0f7e8;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            font-weight: bold;
+            color: #e0f7e8;
+            margin-bottom: 10px;
+        }
+
+        /* Checkout Button */
+        .checkout-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #28a745;
+            color: #e0f7e8;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        .checkout-btn:hover {
+            background-color: #34d058;
+        }
+
+        .cart-empty-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left:20px;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent dark overlay */
+            padding: 20px;
+            height: 100vh; /* Full viewport height */
+        }
+        
+        .centered-gif {
+            width: 600px;
+            height: auto;
+            opacity: 0.7; /* Slight opacity for the GIF itself */
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="cart-container">
+        <h1>Your Cart</h1>
+         
+
+
+        <div class="cart-content">
+            {% if cart.items.count == 0 %}
+                <p>Your cart is empty.</p>
+                <img src="{% static 'images/empty.gif' %}" alt="Empty Cart" class="centered-gif" style='margin-left: 110px;'/>
+            {% else %}
+                <!-- Code to display cart items here -->
+                {% for item in cart_items %}
+                <div class="cart-item">
+                    <div class="cart-item-details">
+                        <img src="{{ item.variant.image.url }}" alt="{{ item.variant.name }}">
+                        <div>
+                            <h2>{{ item.variant.name }}</h2>
+                            <p>Quantity: {{ item.quantity }}</p>
+                            <p>Price: ${{ item.variant.price }}</p>
+                        </div>
+                    </div>
+                    <p class="cart-item-total">Total: ${{ variant.price }}</p>
+                </div>
+            {% endfor %}
+            <div class="cart-total">
+                <p>Grand Total: ${{ 'variant.price' }}</p>
+                <button class="button">Proceed to Checkout</button>
+            </div>
+            {% endif %}
+        </div>
+
+
+
+
+
+            
+         
+    </div>
+
+</body>
+</html>

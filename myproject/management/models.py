@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
+from django.conf import settings
 # from image_cropping import ImageRatioField
 
 class CustomUser(AbstractUser):
@@ -67,25 +68,6 @@ class Edition(models.Model):
         return self.edition_name
 
 
-class Variants(models.Model):
-    colour = models.JSONField()  # Store an array of colors
-    type1 = models.JSONField()    # Store an array of types
-    image1 = models.ImageField(upload_to='variant_images/', null=True, blank=True)
-    image2 = models.ImageField(upload_to='variant_images/', null=True, blank=True)
-    image3 = models.ImageField(upload_to='variant_images/', null=True, blank=True)
-    image4 = models.ImageField(upload_to='variant_images/', null=True, blank=True)   # Store an array of images
-    size = models.JSONField()     # Store an array of sizes
-    stock = models.JSONField()  # Store an array of stock quantities (integers)
-    price = models.JSONField()  #
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    # Many-to-many relationship with Product
-    products = models.ManyToManyField('Product', related_name='variants')
-
-    def __str__(self):
-        return f'Variants for Product'
-
 
 class Categories(models.Model):
     name = models.CharField(max_length=255)
@@ -127,14 +109,45 @@ class ProductImage(models.Model):
 
 
 
+class Variants(models.Model):
+    colour = models.CharField(max_length=50)  # Store a single color
+    type1 = models.CharField(max_length=50)   # Store a single type
+    size = models.CharField(max_length=20)     # Store a single size
+    stock = models.PositiveIntegerField()       # Store stock quantity as a positive integer
+    price = models.DecimalField(max_digits=10, decimal_places=2)  
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    status  =models.CharField(default='listed')
+    # Many-to-many relationship with Product
+    product = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE,default=24)
+     # products = models.ManyToManyField('Product', related_name='variants')
+
+    def __str__(self):
+        return f'Variants for Product: {self.type1} in {self.colour}'
+
+class VariantImage(models.Model):
+    variant = models.ForeignKey(Variants, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='variant_images/')
+
+    def __str__(self):
+        return f'Image for Variant: {self.variant.type1} in {self.variant.colour}'
+
+class Review(models.Model):
+    product = models.ForeignKey('Product', related_name='reviews', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    rating = models.PositiveIntegerField()  # Rating out of 5
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)  # Automatically set the date when created
+
+    class Meta:
+        ordering = ['-created_at']  # Show newest reviews first
+
+    def __str__(self):
+        return f'Review by {self.name} - {self.rating} stars'
 
 
 
-
-
-
-
-
+ 
 
 
 class SportsCar(models.Model):

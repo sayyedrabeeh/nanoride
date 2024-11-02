@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 # from .views import block_user
-from .views import  edit_catogery, delete_catogery ,toggle_category_status,get_suggestions,products1,Brand,edtion,add_brand,toggle_status,edit_brand,list_brand,type1,add_type,edit_type,list_type,Edition1,add_Edition,list_Edition,add_category_view,list_catogery,add_products,list_products,edit_products,product_variants_view,add_variant_view
+from .views import  edit_catogery, delete_catogery ,toggle_category_status,get_suggestions,products1,Brand,edtion,add_brand,toggle_status,edit_brand,list_brand,type1,add_type,edit_type,list_type,Edition1,add_Edition,list_Edition,add_category_view,list_catogery,add_products,list_products,edit_products,product_variants_view,add_variant_view,toggle_listing
 
 from .views import index
 urlpatterns = [
@@ -22,7 +22,7 @@ urlpatterns = [
     path('api/suggestions/', get_suggestions, name='get_suggestions'),   
     # path('catogery/', views.catogery, name='catogery'), 
     path('brand/', views.brand, name='brand'), 
-    path('add-brand/', add_brand, name='add_brand'),
+    path('add_brand/', add_brand, name='add_brand'),
     # path('edit-brand/', views.edit_brand, name='edit_brand'),
     path('edtion/', views.edtion, name='edtion'), 
     path('varients/<int:product_id>/', views.varients, name='varients'),
@@ -47,5 +47,12 @@ urlpatterns = [
     path('<int:product_id>/variants/add/', views.add_variant_view, name='add_variant'),
     # path('products/<int:product_id>/variants/edit/<int:variant_id>/', edit_variant_view, name='edit_variant'),
     path('<int:product_id>/variants/<int:variant_id>/edit/', views.edit_variant, name='edit_variant'),
+    path('management/variants/<int:variant_id>/toggle/', toggle_listing, name='toggle_listing'),
+    path('question/',views.question,name='question'),
+    # path('submit_question/', views.submit_question, name='submit_question'),
+    path('submit_question/', views.submit_question, name='submit_question'),
+
+
+ 
 
  ]

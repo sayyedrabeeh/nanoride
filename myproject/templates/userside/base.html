@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <title>NANORIDE</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&display=swap">
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000;
+            color: #e0f7e8; /* Light green color */
+            font-family: 'Creepster', cursive;
+            margin-bottom: 20px;
+        }
+        
+        /* Navbar */
+        .navbar {
+            background-color: #1b1b1b; /* Dark background */
+            color: #e0f7e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-logo .sidebar-title {
+            color: #e0f7e8; /* Light green color */
+            font-size: 35px;
+            font-weight: 900;
+        }
+        
+        .navbar-menu {
+            display: flex;
+            list-style-type: none;
+        }
+        
+        .navbar-menu li {
+            margin: 0 15px;
+        }
+        
+        .navbar-menu a {
+            color: #e0f7e8;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #333;
+            min-width: 150px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown-content a {
+            color: #e0f7e8;
+            padding: 10px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #444;
+        }
+        
+        /* Navbar Toggle (for Mobile) */
+        .navbar-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+        }
+        
+        .navbar-toggle .bar {
+            width: 25px;
+            height: 3px;
+            background-color: #e0f7e8;
+            margin: 4px;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #1b1b1b;
+            color: #e0f7e8;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .footer-section {
+            flex: 1;
+            margin: 10px;
+        }
+        
+        .footer-section h4 {
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #e0f7e8;
+        }
+        
+        .footer-section ul {
+            list-style-type: none;
+        }
+        
+        .footer-section ul li {
+            margin-bottom: 8px;
+        }
+        
+        .footer-section a {
+            color: #e0f7e8;
+            text-decoration: none;
+        }
+        
+        .footer-section a:hover {
+            text-decoration: underline;
+        }
+        
+        .social-icons {
+            display: flex;
+        }
+        
+        .social-icons a {
+            color: #e0f7e8;
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        
+        .social-icons a:hover {
+            color: wheat;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-menu {
+                display: none;
+                flex-direction: column;
+            }
+        
+            .navbar-menu.show {
+                display: flex;
+            }
+        
+            .navbar-toggle {
+                display: flex;
+            }
+        }
+        .progress-bar {
+            height: 4px;
+            background-color: #28a745; /* Green color */
+            position: relative;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            transition: width 3s linear; /* Change this to control speed */
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="toast-container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast {% if message.tags == 'error' %}toast-danger{% elif message.tags == 'success' %}toast-success{% else %}toast-info{% endif %}">
+                    {{ message }}  <!-- Output the message content -->
+                    <div class="progress-bar"></div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-logo">
+            <span class="sidebar-title">NANORIDE</span>
+        </div>
+        <ul class="navbar-menu">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#featured-products">Featured Products</a></li>
+            <li class="dropdown">
+                <a href="#categories">Categories</a>
+                <div class="dropdown-content">
+                    <a href="#brand">Brand</a>
+                    <a href="#types">Types</a>
+                    <a href="#editions">Editions</a>
+                </div>
+            </li>
+            <li><a href="#newsletter">Newsletter</a></li>
+            <li class="dropdown">
+                <a href="#account">Account</a>
+                <div class="dropdown-content">
+                    <a href="#profile">Profile</a>
+                    <a href="#address">Address</a>
+                    <a href="#wishlist">Wishlist</a>
+                    <a href="#cart">Cart</a>
+                    <a href="{% url 'custom_logout' %}" class="logout-button">Logout</a>
+                </div>
+            </li>
+        </ul>
+        <div class="navbar-toggle" id="navbar-toggle">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}
+        <!-- Page-specific content goes here -->
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About Us</h4>
+                <p>Your company description goes here.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Products</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Contact Us</h4>
+                <p>Email: info@example.com</p>
+                <p>Phone: (123) 456-7890</p>
+            </div>
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById("navbar-toggle").addEventListener("click", function() {
+            document.querySelector(".navbar-menu").classList.toggle("show");
+        });
+
+
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            const progressBar = toast.querySelector('.progress-bar');
+            const duration = 3000; // Duration in milliseconds
+    
+            // Set the progress bar width to 100% initially
+            progressBar.style.width = '100%';
+    
+            setTimeout(() => {
+                // Reduce the width of the progress bar to 0% when it's about to disappear
+                progressBar.style.width = '0%';
+                toast.classList.add('fade-out'); // Add fade-out class
+                setTimeout(() => {
+                    toast.remove(); // Remove toast after fade-out
+                }, 500); // Wait for the fade-out animation to finish
+            }, duration); // Show toast for the specified duration
+        });
+
+    </script>
+</body>
+</html>

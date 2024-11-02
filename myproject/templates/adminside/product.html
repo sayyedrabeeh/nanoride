@@ -7,13 +7,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Category Admin Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
-
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.15/cropper.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    {% comment %} <link rel="stylesheet" href="css/cropper.min.css" /> {% endcomment %}
+    
 
     <style>
         body {
@@ -222,6 +222,39 @@
             font-weight: bold;
             background-color: #00a7eb  
         }
+        #previewContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Increase min size for larger images */
+            gap: 15px; /* Increase space between images */
+            margin-bottom: 20px; /* Space below the container */
+            padding: 10px; /* Padding inside the container */
+            border: 1px solid #ccc; /* Optional: border for visibility */
+        }
+        
+        #previewContainer img {
+            width: 100%; /* Full width of the grid cell */
+            height: 250px; /* Increased height for larger previews */
+            object-fit: cover; /* Maintain aspect ratio */
+            border-radius: 8px; /* Slightly rounded corners */
+            transition: transform 0.2s; /* Smooth hover effect */
+        }
+        
+        #previewContainer img:hover {
+            transform: scale(1.1); /* Slightly enlarge image on hover */
+        }
+        
+        .custom-modal-dialog {
+            max-width: 800px; /* Adjust the width as needed */
+            width: 100%; /* Ensures it fills the container */
+        }
+        
+        @media (max-width: 768px) {
+            .custom-modal-dialog {
+                max-width: 90%; /* Use a smaller width on mobile devices */
+            }
+        }
+        
+        
     </style>
 </head>
 
@@ -291,7 +324,6 @@
                             <th style="width: 15%;">Name</th>
                             <th style="width: 20%; word-wrap: break-word;">Description</th>
                             <th style="width: 15%;">Image</th>
-                            <th style="width: 10%;">Price</th>
                             <th style="width: 10%;">Stock</th>
                             <th style="width: 10%;">Status</th>
                             <th style="width: 5%;">Actions</th>
@@ -304,14 +336,22 @@
                             <td>{{ i.name }}</td>
                             <td style="word-wrap: break-word;">{{ i.description }}</td>
                             <td>
-                                {% if i.image %}
-                                    <img src="{{ i.image.url }}" alt="{{ i.name }}" style="width: 50px; height: auto;">
+                                {% if i.variants.exists %}
+                                    <div style="display: flex; gap: 10px;">
+                                        {% with first_variant_image=i.variants.first.images.first %}
+                                            {% if first_variant_image %}
+                                                <img src="{{ first_variant_image.image.url }}" alt="Variant Image" style="width: 50px; height: auto;">
+                                            {% else %}
+                                                <span>No Variant Image</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
                                 {% else %}
-                                    <span>No Image</span>
+                                    <span>No Variants</span>
                                 {% endif %}
                             </td>
-                            <td>${{ i.price }}</td>
-                            <td>{{ i.stock }}</td>
+                           
+                            <td>{{ i.total_stock|default:0 }}</td>
                             <td>
                                 <span class="status" style="font-weight: bold; color: {% if i.status == 'listed' %} green {% else %} red {% endif %};">
                                     {{ i.status }}
@@ -350,7 +390,7 @@
     
         <!-- Add Product Modal -->
         <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog  custom-modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Add New Product</h5>
@@ -358,66 +398,59 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                   <form action="{% url 'add_products' %}"id="addProductForm" method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="modal-body">
-        <div class="form-group">
-            <label>Name</label>
-            <input type="text" class="form-control" name="name" placeholder="Enter item name" required>
-        </div>
-        <div class="form-group">
-            <label>Description</label>
-            <textarea class="form-control" name="description" rows="3" placeholder="Enter item description" required></textarea>
-        </div>
-        <div class="form-group">
-            <label>Brand</label>
-            <select class="form-control" name="brand" required>
-                <option value="">Select a Brand</option>
-                {% for brand in brands %}
-                    <option value="{{ brand.id }}">{{ brand.brand_name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Category</label>
-            <select class="form-control" name="category" required>
-                <option value="">Select a Category</option>
-                {% for category in categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="price">Price</label>
-            <input type="number" class="form-control" name="price" id="price" placeholder="Enter price" required min="0" step="0.01">
-        </div>
-        <div class="form-group">
-            <label for="stock">Stock</label>
-            <input type="number" class="form-control" name="stock" id="stock" placeholder="Enter stock" required min="0" step="1">
-        </div>
-        <div class="form-group">
-            <label>Main Image</label>
-            <input type="file" class="form-control" id="addMainImage" accept="image/*" required>
-            <img id="addImagePreview" style="display:none; width:100%; margin-top:10px;">
-        </div>
-         <div>
-                        <button type="button" id="zoomIn" class="btn btn-secondary">Zoom In</button>
-                        <button type="button" id="zoomOut" class="btn btn-secondary">Zoom Out</button>
-                    </div>
-    </div>
-    <div class="modal-footer">
-        <button type="button" id="cropAndAdd" class="btn btn-primary">Crop and Add Item</button>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-    </div>
-</form>
+                    <form action="{% url 'add_products' %}" id="addProductForm" method="POST" enctype="multipart/form-data">
+                        {% comment %} <input type="hidden" id="product-id" value="{{ product.id }}">  {% endcomment %}
+                        {% comment %} <input type="hidden" id="product-id" value="some_product_id"> {% endcomment %}
+
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <p>Product ID: {{ id }}</p>
+                                <label>Name</label>
+                                <input type="text" class="form-control" name="name" placeholder="Enter item name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea class="form-control" name="description" rows="3" placeholder="Enter item description" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Brand</label>
+                                <select class="form-control" name="brand" required>
+                                    <option value="">Select a Brand</option>
+                                    {% for brand in brands %}
+                                        <option value="{{ brand.id }}">{{ brand.brand_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select class="form-control" name="category" required>
+                                    <option value="">Select a Category</option>
+                                    {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="stock">Stock</label>
+                                <input type="number" class="form-control" name="stock" id="stock" placeholder="Enter stock" required min="0" step="1">
+                            </div>
+                           
+                        <div class="modal-footer">
+                            <button type="submit" id="crop" class="btn btn-primary">Crop and Add Item</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
+        
     
         <!-- Edit Product Modal -->
         {% for i in products %}
         <div class="modal fade" id="editModal{{ i.id }}" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog custom-modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Edit Product</h5>
@@ -425,7 +458,7 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form action="{% url 'edit_products' i.id %}" id="editProductForm{{ i.id }}"method="POST" enctype="multipart/form-data">
+                    <form action="{% url 'edit_products' i.id %}" id="editProductForm{{ i.id }}" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="modal-body">
                             <div class="form-group">
@@ -454,23 +487,12 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label>Price</label>
-                                <input type="number" class="form-control" name="price" value="{{ i.price }}" placeholder="Enter product price" min="0" step="0.01" required>
-                            </div>
+                             
                             <div class="form-group">
                                 <label>Stock</label>
                                 <input type="number" class="form-control" name="stock" value="{{ i.stock }}" placeholder="Enter stock quantity" min="0" step="1" required>
                             </div>
                             
-                            <div class="form-group">
-                                <label>Image</label>
-                                <input type="file" class="form-control-file" id="editImage{{ i.id }}" accept="image/*">
-                                <img id="editImagePreview{{ i.id }}" style="display:none; width:100%; margin-top:10px;">
-                                {% if i.image %}
-                                    <img src="{{ i.image.url }}" alt="{{ i.name }}" style="width: 100px; height: auto; margin-top: 10px;">
-                                {% endif %}
-                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="submit" id="cropAndEdit" class="btn btn-primary">Crop and Edit Product</button>
@@ -481,15 +503,20 @@
             </div>
         </div>
         {% endfor %}
+        
     </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.15/cropper.min.js"></script>
-
+    <script src="https://unpkg.com/cropperjs/dist/cropper.js"></script>
+    
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -502,198 +529,191 @@
                 mainContent.classList.toggle('expanded'); // Toggle the 'expanded' class on the main content
             });
         });
-
-
-        let cropper;
-        let editCropper;
+        {% comment %} let croppers = [];  // Array to store Cropper instances
+        let croppedImages = [];  // Array to store cropped image blobs
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagesInput = document.getElementById('additionalImage');  // Matches your HTML ID
         
-        // Function to initialize cropper for add product
-        function initializeAddCropper() {
-            const imagePreview = document.getElementById('addImagePreview');
-            if (cropper) {
-                cropper.destroy();
-            }
-            cropper = new Cropper(imagePreview, {
-                aspectRatio: 1,
-                viewMode: 1,
-            });
-        }
+        imagesInput.addEventListener('change', function(event) {
+            previewContainer.innerHTML = '';  // Clear previous previews
+            croppedImages = [];  // Clear previous cropped images
+            croppers = [];  // Clear previous Cropper instances
         
-        // Event listener for file input change (Add Product)
-        document.getElementById('addMainImage').addEventListener('change', function(e) {
-            const files = e.target.files;
+            const files = event.target.files;
+        
             if (files && files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const imagePreview = document.getElementById('addImagePreview');
-                    imagePreview.src = event.target.result;
-                    imagePreview.style.display = 'block';
-                    initializeAddCropper();
-                };
-                reader.readAsDataURL(files[0]);
-            }
-        });
+                Array.from(files).forEach((file) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const previewDiv = document.createElement('div');
+                        const imgElement = document.createElement('img');
         
-        // Event listener for cropping and adding product
-        document.getElementById('cropAndAdd').addEventListener('click', function() {
-            if (cropper) {
-                cropper.getCroppedCanvas().toBlob(function(blob) {
-                    if (blob) {
-                        const formData = new FormData(document.getElementById('addProductForm'));
-                        formData.append('main_image', blob, 'cropped-image.png');
+                        imgElement.src = e.target.result;
+                        imgElement.alt = 'Image Preview';
+                        imgElement.style.maxWidth = '300px';
+                        imgElement.style.maxHeight = '300px';
+                        imgElement.style.cursor = 'pointer';
+                        imgElement.style.border = '2px solid #ccc';
+                        imgElement.style.margin = '10px';
         
-                        fetch(document.getElementById('addProductForm').action, {
-                            method: 'POST',
-                            body: formData,
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.text();
-                        })
-                        .then(data => {
-                            console.log('Success:', data);
-                            location.reload();
-                        })
-                        .catch((error) => {
-                            console.error('Error:', error);
+                        previewDiv.appendChild(imgElement);
+                        previewContainer.appendChild(previewDiv);
+        
+                        // Initialize Cropper for this image
+                        const cropper = new Cropper(imgElement, {
+                            aspectRatio: 1,  // Adjust as needed
+                            viewMode: 3,
                         });
-                    } else {
-                        console.error('Failed to create blob from cropped canvas');
-                    }
-                }, 'image/png');
-            } else {
-                console.error('Cropper has not been initialized');
-            }
-        });
         
-        // Function to initialize cropper for edit product
-        function initializeEditCropper() {
-            const imagePreview = document.getElementById('editImagePreview');
-            if (editCropper) {
-                editCropper.destroy();
-            }
-            editCropper = new Cropper(imagePreview, {
-                aspectRatio: 1,
-                viewMode: 1,
-            });
-        }
-        
-        // Event listener for file input change (Edit Product)
-        document.getElementById('editMainImage').addEventListener('change', function(e) {
-            const files = e.target.files;
-            if (files && files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const imagePreview = document.getElementById('editImagePreview');
-                    imagePreview.src = event.target.result;
-                    imagePreview.style.display = 'block';
-                    initializeEditCropper();
-                };
-                reader.readAsDataURL(files[0]);
-            }
-        });
-        
-        // Event listener for cropping and editing product
-        document.getElementById('cropAndEdit').addEventListener('click', function() {
-            if (editCropper) {
-                editCropper.getCroppedCanvas().toBlob(function(blob) {
-                    if (blob) {
-                        const formData = new FormData(document.getElementById('editProductForm'));
-                        formData.append('main_image', blob, 'cropped-image.png');
-        
-                        fetch(document.getElementById('editProductForm').action, {
-                            method: 'POST',
-                            body: formData,
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.text();
-                        })
-                        .then(data => {
-                            console.log('Success:', data);
-                            location.reload();
-                        })
-                        .catch((error) => {
-                            console.error('Error:', error);
-                        });
-                    } else {
-                        console.error('Failed to create blob from cropped canvas');
-                    }
-                }, 'image/png');
-            } else {
-                console.error('Cropper has not been initialized');
-            }
-        });
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            let cropper;
-        
-            const addMainImage = document.getElementById('addMainImage');
-            if (addMainImage) {
-                addMainImage.addEventListener('change', function(e) {
-                    const files = e.target.files;
-                    if (files && files.length > 0) {
-                        const reader = new FileReader();
-                        reader.onload = function(event) {
-                            const imagePreview = document.getElementById('addImagePreview');
-                            imagePreview.src = event.target.result;
-                            imagePreview.style.display = 'block';
-        
-                            if (cropper) {
-                                cropper.destroy();
-                            }
-        
-                            cropper = new Cropper(imagePreview, {
-                                aspectRatio: 1,
-                                viewMode: 1,
-                            });
-                        };
-                        reader.readAsDataURL(files[0]);
-                    }
+                        croppers.push(cropper);  // Store cropper instance
+                    };
+                    reader.readAsDataURL(file);  // Load the file
                 });
             }
+        });
         
-            const cropAndAddButton = document.getElementById('cropAndAdd');
-            if (cropAndAddButton) {
-                cropAndAddButton.addEventListener('click', function() {
-                    if (cropper) {
+        // Handle form submission and cropping
+        document.getElementById('addProductForm').addEventListener('submit', function(event) {
+            event.preventDefault();  // Prevent form submission before cropping is done
+        
+            const croppedPromises = croppers.map((cropper, index) => {
+                return new Promise((resolve) => {
+                    cropper.getCroppedCanvas().toBlob(function(blob) {
+                        if (blob) {
+                            croppedImages.push(blob);
+                            resolve();
+                        } else {
+                            console.error('Failed to create blob from cropped canvas');
+                            resolve();  // Resolve even if blob creation fails to avoid hanging
+                        }
+                    });
+                });
+            });
+        
+            // Wait for all images to be cropped
+            Promise.all(croppedPromises).then(() => {
+                const formData = new FormData(event.target);  // Include existing form data
+        
+                // Append each cropped image to formData
+                croppedImages.forEach((blob, index) => {
+                    formData.append(`additional_image_${index}`, blob, `cropped-image-${index}.png`);
+                });
+        
+                // Finally, submit the form
+                fetch(event.target.action, {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    window.location.href = '/management/products/'; // Redirect or update UI
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+        
+        
+
+
+
+
+
+
+        let editCroppers = {};  // Object to store Cropper instances for each modal
+        let editCroppedImages = {};  // Object to store cropped image blobs for each modal
+        
+        document.querySelectorAll('input[type="file"][id^="editImages"]').forEach(input => {
+            input.addEventListener('change', function(event) {
+                const modalId = this.id.replace('editImages', '');  // Extract modal ID
+                const previewContainer = document.getElementById(`editImagesPreview${modalId}`);
+                
+                previewContainer.innerHTML = '';  // Clear previous previews
+                editCroppedImages[modalId] = [];  // Reset cropped images for this modal
+                editCroppers[modalId] = [];  // Reset Cropper instances for this modal
+        
+                const files = event.target.files;
+                
+                Array.from(files).forEach((file) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imgElement = document.createElement('img');
+                        imgElement.src = e.target.result;
+                        imgElement.style.maxWidth = '300px';
+                        imgElement.style.maxHeight = '300px';
+                        imgElement.style.margin = '10px';
+                        previewContainer.appendChild(imgElement);
+                        
+                        // Initialize Cropper for this image
+                        const cropper = new Cropper(imgElement, {
+                            aspectRatio: 1,  // Free cropping
+                            viewMode: 3,
+                        });
+        
+                        editCroppers[modalId].push(cropper);  // Store cropper instance
+                    };
+                    reader.readAsDataURL(file);  // Load the file
+                });
+            });
+        });
+        
+        // Handle form submission for editing
+        document.querySelectorAll('form[id^="editProductForm"]').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();  // Prevent default submission
+        
+                const modalId = this.id.replace('editProductForm', '');  // Extract modal ID
+                const cropperInstances = editCroppers[modalId];  // Get the corresponding cropper instances
+        
+                const croppedPromises = cropperInstances.map((cropper) => {
+                    return new Promise((resolve) => {
                         cropper.getCroppedCanvas().toBlob(function(blob) {
                             if (blob) {
-                                const formData = new FormData(document.getElementById('addProductForm'));
-                                formData.append('main_image', blob, 'cropped-image.png');
-        
-                                fetch(document.getElementById('addProductForm').action, {
-                                    method: 'POST',
-                                    body: formData,
-                                })
-                                .then(response => {
-                                    if (!response.ok) {
-                                        throw new Error('Network response was not ok');
-                                    }
-                                    return response.text();
-                                })
-                                .then(data => {
-                                    console.log('Success:', data);
-                                    location.reload();
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                });
-                            } else {
-                                console.error('Failed to create blob from cropped canvas');
+                                editCroppedImages[modalId].push(blob);  // Store cropped image blob
                             }
-                        }, 'image/png');
-                    } else {
-                        console.error('Cropper has not been initialized');
-                    }
+                            resolve();  // Resolve regardless of success or failure
+                        });
+                    });
                 });
-            }
+        
+                Promise.all(croppedPromises).then(() => {
+                    const formData = new FormData(this);  // Include existing form data
+                    editCroppedImages[modalId].forEach((blob, index) => {
+                        formData.append(`edited_images[]`, blob, `edited-image-${modalId}-${index}.png`);  // Append cropped images
+                    });
+        
+                    // Submit the form with fetch
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.text();
+                    })
+                    .then(data => {
+                        console.log('Success:', data);
+                        window.location.href = '/management/products/';  // Redirect or update UI
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                });
+            });
         });
+         {% endcomment %}
 
+        
         {% comment %} $(document).ready(function() {
             $("#search").on("keyup", function() {
                 var value = $(this).val().toLowerCase(); // Get the search input and convert to lowercase

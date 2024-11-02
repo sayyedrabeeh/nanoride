@@ -4,13 +4,21 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
-from .models import Categories,Brand,Type1,Edition,Product,Variants
+from .models import Categories,Brand,Type1,Edition,Product,Variants,VariantImage,ProductImage
 from django.shortcuts import render, redirect, get_object_or_404
 import logging
+from django.core.mail import send_mail
+from django.conf import settings
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from .models import SportsCar
+from authentication.models import ProductQuestion
 from django.views.decorators.cache import never_cache
+from django.contrib import messages
+from django.db.models import Sum
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
 @never_cache
 @login_required(login_url='admin_login')
 def users(request):
@@ -178,52 +186,70 @@ def get_suggestions(request):
 
     suggestions = Categories.objects.filter(**{f"{field}__icontains": query}).values_list(field, flat=True).distinct()
     return JsonResponse(list(suggestions), safe=False)
+
+
+
+
 @never_cache
 @login_required(login_url='admin_login')
 def products1(request):
-    products = Product.objects.all()
+    products = Product.objects.annotate(total_stock=Sum('variants__stock')).prefetch_related(
+        'variants__images'
+    )
+    # products = Product.objects.all()
     categories = Categories.objects.all() # Fetch all products
     brands = Brand.objects.all()  # Fetch all brands
-    return render(request, 'adminside/product.html', {'products': products, 'brands': brands,'categories': categories})
+    return render(request, 'adminside/product.html', {'products': products , 'brands': brands,'categories': categories})
+
+
+
+
 @never_cache
 @login_required(login_url='admin_login')
 def add_products(request):
     categories = Categories.objects.filter(status='listed')
     brands = Brand.objects.filter(status='listed')
-    variants = Variants.objects.all()  # Fetch variants if needed
+    product = Product.objects.all()
 
     if request.method == 'POST':
-        print('hii')
+        # Retrieve product details from the form
         name = request.POST.get('name')
         description = request.POST.get('description')
         category_id = request.POST.get('category')
         brand_id = request.POST.get('brand')
-        price = request.POST.get('price')  # Get price from the form
-        stock = request.POST.get('stock')  # Get stock from the form
-        image = request.FILES.get('main_image')  # Get image from the form
+       
+        stock = request.POST.get('stock')
 
-        
+        # Get category and brand objects
         category = get_object_or_404(Categories, id=category_id)
         brand = get_object_or_404(Brand, id=brand_id)
 
-            # Create a new product instance
+        # Create a new product instance
         new_item = Product(
-                name=name,
-                description=description,
-                category=category,
-                brand=brand,
-                price=price,
-                stock=stock,
-                image=image  # Save the image
-            )
+            name=name,
+            description=description,
+            category=category,
+            brand=brand,
+          
+            stock=stock,
+        )
         new_item.save()
+
+        # Loop through each additional cropped image
+        for key in request.FILES:
+            if key.startswith('additional_image_'):
+                cropped_image = request.FILES[key]
+                ProductImage.objects.create(product=new_item, image=cropped_image)
+                print(f'Saved cropped image: {cropped_image.name}')
+
         return redirect('products')
 
     return render(request, 'adminside/product.html', {
         'categories': categories,
         'brands': brands,
-        'variants': variants  # Pass variants to the template if needed
+        'product': product,
     })
+    
 @never_cache
 @login_required(login_url='admin_login')
 def edit_products(request, product_id):
@@ -237,20 +263,23 @@ def edit_products(request, product_id):
         product.description = request.POST.get('description')
         category_id = request.POST.get('category')
         brand_id = request.POST.get('brand')
-        price = request.POST.get('price')
+       
         stock = request.POST.get('stock')
-        
-        if request.FILES.get('main_image'):
-            product.image = request.FILES.get('main_image')  # Update the image if provided
-        
+
         if category_id and brand_id:
             category = get_object_or_404(Categories, id=category_id)
             brand = get_object_or_404(Brand, id=brand_id)
 
             product.category = category
             product.brand = brand
-            product.price = price  # Update the price
+         # Update the price
             product.stock = stock  # Update the stock
+            
+            # Handle multiple image uploads
+            if request.FILES.getlist('edited_images[]'):
+                for img in request.FILES.getlist('edited_images[]'):
+                    ProductImage.objects.create(product=product, image=img)  # Create a new image instance
+
             product.save()
             return redirect('products')  # Redirect to the products list
 
@@ -259,6 +288,10 @@ def edit_products(request, product_id):
         'categories': categories,
         'brands': brands,
     })
+    
+    
+    
+    
 @never_cache   
 @login_required(login_url='admin_login')   
 def list_products(request):
@@ -282,25 +315,40 @@ def list_products(request):
 @never_cache
 @login_required(login_url='admin_login')
 def brand(request):
-    if request.user.is_authenticated:
-      return redirect('users')
+    # if request.user.is_authenticated:
+    #   return redirect('brand')
     brand=Brand.objects.all().order_by('status')
     return render(request,'adminside/brand.html',{'brand':brand})
 @never_cache
 @login_required(login_url='admin_login')
 @csrf_exempt
 def add_brand(request):
+    brand=Brand.objects.all().order_by('status')
     if request.method == 'POST':
-        brand_name = request.POST['brand_name']
-        country = request.POST['country']
-        image = request.FILES['image']
-         
-        
+        brand_name = request.POST.get('brand_name')
+        country = request.POST.get('country')
+        image = request.FILES.get('image')
+
+        # Check if the brand already exists
+        if Brand.objects.filter(brand_name=brand_name).exists():
+            messages.error(request, 'Brand name already exists.')
+            # Render the same template with the error
+            return render(request, 'adminside/brand.html', {
+                'brand':brand,
+                'errors': {'brand_name''Brand name already exists.'},
+                'brand_name': brand_name,
+                'country': country,
+                'modal_open': True,  # Flag to indicate the modal should be open
+            })
+
         # Save the new brand
         brand = Brand(brand_name=brand_name, country=country, image=image)
         brand.save()
-        
-        return redirect('brand')
+
+        messages.success(request, 'Brand added successfully.')
+        return redirect('brand')  # Redirect to the brand list or desired page
+
+    return render(request, 'adminside/brand.html', {'modal_open': False}) 
 
 @never_cache
 @login_required(login_url='admin_login')
@@ -573,76 +621,48 @@ def varients(request, product_id):
     if request.method == 'POST':
         try:
             # Prepare to collect variant data
-            variant_data = []
-            for i in range(len(request.POST.getlist('colour'))):  # Iterate over the number of variants submitted
-                colour = request.POST.getlist('colour')[i]
-                size = request.POST.getlist('size')[i]
-                type1 = request.POST.getlist('type1')[i]
-                stock = int(request.POST.getlist('stock')[i])
-                price = float(request.POST.getlist('price')[i])
+            colour = request.POST.get('colour')
+            size = request.POST.get('size')
+            type1 = request.POST.get('type1')
+            stock = int(request.POST.get('stock'))
+            price = float(request.POST.get('price'))
 
-                # Handle the images (if required, can use a list for multiple images)
-                image1 = request.FILES.getlist('image1')[i] if request.FILES.getlist('image1') else None
-                image2 = request.FILES.getlist('image2')[i] if request.FILES.getlist('image2') else None
+            # Check for duplicates
+            if Variants.objects.filter(
+                colour=colour,
+                size=size,
+                type1=type1,
+                product=product
+            ).exists():
+                return HttpResponseBadRequest("Variant with the same attributes already exists.")
 
-                # Check for duplicates
-                if Variants.objects.filter(
-                    colour=colour,
-                    size=size,
-                    type1=type1,
-                    products=product
-                ).exists():
-                    return HttpResponseBadRequest(f"Variant with Colour: {colour}, Size: {size}, Type: {type1} already exists.")
+            # Create the variant
+            variant = Variants.objects.create(
+                product=product,
+                colour=colour,
+                size=size,
+                type1=type1,
+                stock=stock,
+                price=price
+            )
 
-                # Save variant data for this entry
-                variant_data.append({
-                    'colour': colour,
-                    'size': size,
-                    'type1': type1,
-                    'stock': stock,
-                    'price': price,
-                    'image1': image1,
-                    'image2': image2,
-                })
+            # Save each of the images associated with the variant
+            for i in range(1, 5):  # Assuming you want to support 4 images
+                image = request.FILES.get(f'image{i}')
+                if image:  # Check if the image exists
+                    VariantImage.objects.create(variant=variant, image=image)
 
-            # Now save all variants
-            for data in variant_data:
-                variant = Variants(
-                    colour=data['colour'],
-                    size=data['size'],
-                    type1=data['type1'],
-                    stock=data['stock'],
-                    price=data['price'],
-                    image1=data['image1'],
-                    image2=data['image2'],
-                )
-                variant.save()
-                variant.products.add(product)  # Associate the variant with the product
-
-            return redirect('varients', product_id=product_id)  # Redirect after saving
+            return redirect('varients', product_id=product_id)
 
         except Exception as e:
             return HttpResponseBadRequest(f"An error occurred: {str(e)}")
 
-    # Load existing variants for the specific product
-    variants = Variants.objects.filter(products__id=product_id)
-
-    return render(request, 'adminside/varients.html', {'product': product, 'variants': variants})
-
-
-
-# def viewvarients(request,id):
-#    print('hii')
-#    product = get_object_or_404(Product, id=id)
-#    variants = Variants.objects.filter(products=product)
-#    print('varient ind  too  :',variants)
-#    context = {
-#         'product': product, 
-#         'variants': variants}
-#    return render(request,'adminside/view varient.html',context)
-
-
-
+    variants = Variants.objects.filter(product=product)
+    context = {
+        'product': product,
+        'variants': variants
+    }
+    return render(request, 'adminside/varients.html', context)
 
 @never_cache
 @login_required(login_url='admin_login')
@@ -664,7 +684,11 @@ def index(request):
 @login_required(login_url='admin_login')
 def product_variants_view(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    variants = product.variants.all()
+    variants = product.variants.filter(id__isnull=False)  
+    print('iiii',variants)
+    for variant in variants:
+        print('Variant ID:', variant.id)
+    # variants = product.variants.all()
     
     context = {
         'product': product,
@@ -675,69 +699,169 @@ def product_variants_view(request, product_id):
 @never_cache
 @login_required(login_url='admin_login')
 def add_variant_view(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
     if request.method == 'POST':
         # Capture the fields
-        colour = request.POST.getlist('colour')  # Assuming this is a list of colors
-        size = request.POST.getlist('size')      # Assuming this is a list of sizes
-        type1 = request.POST.getlist('type1')    # Assuming this is a list of types
-        stock = request.POST.getlist('stock')     # Assuming this is a list of stock quantities
-        price = request.POST.getlist('price')     # Assuming this is a list of prices
-        # Capture image fields
-        image1 = request.FILES.get('image1')
-        image2 = request.FILES.get('image2')
-        image3 = request.FILES.get('image3')
-        image4 = request.FILES.get('image4')
+        colour = request.POST.get('colour')
+        size = request.POST.get('size')
+        type1 = request.POST.get('type1')
+        stock = int(request.POST.get('stock'))
+        price = float(request.POST.get('price'))
+
+        # Check if the variant already exists
+        if Variants.objects.filter(product=product, colour=colour, size=size, type1=type1).exists():
+            messages.error(request, 'This variant already exists for the product.')
+            return render(request, 'adminside/varients.html', {'product': product})
 
         # Create the variant instance
         variant = Variants.objects.create(
-            colour=colour,  # This will be a JSON array
-            size=size,      # This will be a JSON array
-            type1=type1,    # This will be a JSON array
-            stock=stock,    # This will be a JSON array
-            price=price,    # This will be a JSON array
-            image1=image1,
-            image2=image2,
-            image3=image3,
-            image4=image4,
+            product=product,
+            colour=colour,
+            size=size,
+            type1=type1,
+            stock=stock,
+            price=price,
         )
 
-        # Associate the variant with the product
-        product = get_object_or_404(Product, id=product_id)
-        variant.products.add(product)
+        # Handle the uploaded images
+        for key in request.FILES:
+            if key.startswith('additional_image_'):
+                image = request.FILES[key]
+                VariantImage.objects.create(variant=variant, image=image)
 
-        return redirect('variants', product_id=product.id)
+        messages.success(request, 'Variant added successfully.')
+        return redirect('variants', product_id=product.id)  # Redirect to the variants page
 
-    # Handle GET request
-    return render(request, 'adminside/varients.html')
+    return render(request, 'adminside/varients.html', {'product': product})
+
 @never_cache
 @login_required(login_url='admin_login')
-def edit_variant(request, id):
-    print('hiii',id)
-    variant = get_object_or_404(Variants, id=id)
+def edit_variant(request, product_id, variant_id):
+    product = get_object_or_404(Product, id=product_id)
+    variant = get_object_or_404(Variant, id=variant_id)
 
     if request.method == 'POST':
         # Update the variant with the new data
         variant.colour = request.POST.get('colour')
         variant.size = request.POST.get('size')
         variant.type1 = request.POST.get('type1')
-        variant.stock = request.POST.get('stock')
-        variant.price = request.POST.get('price')
+        variant.stock = int(request.POST.get('stock'))
+        variant.price = float(request.POST.get('price'))
+
+        variant.save()  # Save the variant first
 
         # Handle image uploads if provided
-        if 'image1' in request.FILES:
-            variant.image1 = request.FILES['image1']
-        if 'image2' in request.FILES:
-            variant.image2 = request.FILES['image2']
-        if 'image3' in request.FILES:
-            variant.image3 = request.FILES['image3']
-        if 'image4' in request.FILES:
-            variant.image4 = request.FILES['image4']
+        for i in range(1, 5):  # Assuming you want to support 4 images
+            if f'image{i}' in request.FILES:
+                image = request.FILES[f'image{i}']
+                VariantImage.objects.create(variant=variant, image=image)
 
-        variant.save()
-        return redirect('variants')  # Redirect to the variant list or another page
+        return redirect('variants', product_id=variant.product.id)
 
     # For GET request, render the edit form with existing variant data
     context = {
-        'variant': variant
+         'product': product,
+        'variant': variant,
     }
     return render(request, 'adminside/varients.html', context)
+
+def toggle_listing(request, variant_id):
+    variant = get_object_or_404(Variants, id=variant_id)
+    
+    # Toggle the status
+    if variant.status == 'listed':
+        variant.status = 'unlisted'
+    else:
+        variant.status = 'listed'
+    
+    variant.save()
+    product_id = variant.product.id 
+    
+    return redirect('variants',product_id=product_id) 
+
+
+    
+def question(request):
+    print('hi')
+    questions = ProductQuestion.objects.all().order_by('-status')
+    question_to_answer = None
+
+    if request.method == 'POST':
+        print('hloo')
+        action = request.POST.get('action')
+        question_id = request.POST.get('question_id')
+
+        if action == 'answer' and question_id:
+            question_to_answer = get_object_or_404(ProductQuestion, id=question_id)
+
+        elif action == 'submit_answer':
+            answer = request.POST.get('answer')
+            question = get_object_or_404(ProductQuestion, id=question_id)
+            question.answer = answer  # Store the answer in the database
+            question.status = 'answered'
+            question.save()
+            question_text = question.question
+            send_answer_email(question.email, answer,question_text)  # Send an email notification
+            return redirect('question')
+
+        elif action == 'send_privately':
+            answer = request.POST.get('answer')
+            question = get_object_or_404(ProductQuestion, id=question_id)
+            question.status = 'answered'
+            question.answered_privately = True
+            question.save()
+            question_text = question.question
+            send_answer_email(question.email, answer,question_text)  # Send an email notification
+            return redirect('question')
+
+    return render(request, 'adminside/questions.html', {
+        'questions': questions,
+        'question_to_answer': question_to_answer
+    })
+    
+def send_answer_email(to_email, answer,question_text):
+    subject = 'Your Question Answered'
+    # Render the email HTML template with the answer context
+    context = {
+        'answer': answer,
+        'question': question_text
+    }
+    html_message = render_to_string('email_templates/answer_notification.html',context)
+    plain_message = strip_tags(html_message)  # Fallback plain-text version
+    from_email = settings.DEFAULT_FROM_EMAIL
+
+    send_mail(subject, plain_message, from_email, [to_email], html_message=html_message)
+    
+    
+
+@csrf_exempt
+def submit_question(request):
+    if request.method == 'POST':
+        question_text = request.POST.get('question')
+        email = request.POST.get('email')  # Retrieve email from request
+        product_id = request.POST.get('product_id')  # Retrieve product_id from request
+
+        if question_text and email and product_id:
+            try:
+                # Save the question to the ProductQuestion model
+                new_question = ProductQuestion.objects.create(
+                    question=question_text,
+                    email=email,
+                    product_id=product_id  # Set the product_id
+                )
+                return JsonResponse({'message': 'Question submitted successfully!'}, status=200)
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=500)
+        else:
+            # Check for missing fields and provide a specific error message
+            missing_fields = []
+            if not question_text:
+                missing_fields.append('question')
+            if not email:
+                missing_fields.append('email')
+            if not product_id:
+                missing_fields.append('product_id')
+            error_message = f"{' and '.join(missing_fields).capitalize()} cannot be empty."
+            return JsonResponse({'error': error_message}, status=400)
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)

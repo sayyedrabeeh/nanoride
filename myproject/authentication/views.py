@@ -22,22 +22,24 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.urls import reverse
-from management.models import Product
+from management.models import Product,Variants
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.views.generic import TemplateView
 from django.contrib import messages
-
-
-
-# from .views import custom_logout
-
-
-
+from django.http import JsonResponse
+import json
+from .models import ProductQuestion,CustomUser,Address,Cart
+from authentication.models import CustomUser
+from django.contrib.auth.views import LoginView
+from management.models import Review 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
+from django.contrib.auth import get_user_model
+from django.contrib.auth import update_session_auth_hash
+
 
 def admin_login(request):
     if request.method == 'POST':
@@ -83,7 +85,7 @@ def usersignup(request):
             messages.error(request, 'Passwords must be six charecter.')
         else:
             # Create a new user but don't save yet
-            user = User(username=username, email=email)
+            user = CustomUser(username=username, email=email)
             user.set_password(password1)
 
             # Generate and send OTP
@@ -162,7 +164,7 @@ def verify_otp(request):
             # Check if user data exists in session
             if user_data:
                 # Create a new user instance
-                user = User(username=user_data['username'], email=user_data['email'])
+                user = CustomUser(username=user_data['username'], email=user_data['email'])
                 user.set_password(user_data['password'])
 
                 try:
@@ -177,7 +179,7 @@ def verify_otp(request):
                     # Clear session data after successful registration
                     del request.session['otp']
                     del request.session['user_data']
-                    return redirect('userlogin')  # Redirect to the dashboard or home page
+                    return redirect('home')  # Redirect to the dashboard or home page
                 except ValidationError as e:
                     messages.error(request, f'Error creating account: {str(e)}')
             else:
@@ -229,22 +231,24 @@ def resend_otp(request):
 
 
 def userlogin(request):
+    User = get_user_model() 
     if request.user.is_authenticated:
         return redirect('home')
 
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-
+        print('username:',username)
+        print('password:',password)
         # Check if the user exists
-        if not User.objects.filter(username=username).exists():
-            print('ffffffffffffff',username)
+        if not CustomUser.objects.filter(username=username).exists():
+            
             messages.error(request, 'User does not exist. Please sign up.')
             return render(request, 'account/login.html', {'username': username})
 
         # Authenticate the user
         user = authenticate(request, username=username, password=password)
-        print('ffffffffvv',user)
+        print('user :',user)
         if user is not None:
               if not user.is_active:
                     messages.error(request, "You are not allowed to log in.")
@@ -256,6 +260,8 @@ def userlogin(request):
             return render(request, 'account/login.html', {'username': username})
 
     return render(request, 'account/login.html')
+
+
 
 class CustomBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
@@ -273,11 +279,11 @@ class CustomBackend(ModelBackend):
 def custom_logout(request):
     logout(request)  # Log out the user
     # Optionally, add any additional logic here (e.g., logging, notifications)
-    return redirect(reverse( 'custom_login' )) 
+    return redirect(reverse( 'login' )) 
 
 def home(request):
     products=Product.objects.all()
-    
+    products = Product.objects.prefetch_related('variants__images').all()
     context={
         'products':products
     }
@@ -286,7 +292,7 @@ def home(request):
 @login_required
 def userproducts(request):
     
-    products=Product.objects.all()
+    products = Product.objects.prefetch_related('variants__images').all()
     
     context={
         'products':products
@@ -294,21 +300,128 @@ def userproducts(request):
     
     return render(request,'userside/products.html',context)
 
+
+@csrf_exempt 
+def submit_review(request, id):
+    if request.method == 'POST':
+        product = get_object_or_404(Product, id=id)
+        name = request.POST.get('name')
+        rating = int(request.POST.get('rating'))
+        comment = request.POST.get('comment')
+
+        # Create and save the review
+        review = Review(product=product, name=name, rating=rating, comment=comment)
+        review.save()
+
+        return JsonResponse({'success': True, 'review': {
+            'name': review.name,
+            'rating': review.rating,
+            'comment': review.comment,
+            'created_at': review.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        }})
+
+    return JsonResponse({'success': False})
+
+
 @login_required
-def singleproduct(request,id):
+def singleproduct(request, id):
+    # cart = get_object_or_404(Cart, user=request.user)
+    # variant = get_object_or_404(Variants, product=product)  # Use this line only if you want the first variant
+
+    cart, created = Cart.objects.get_or_create(user=request.user)
+
+
+
     product = get_object_or_404(Product, id=id)
-    products = Product.objects.exclude(id=id)[:6]   
+    additional_images = product.additional_images.all()
+    related_products = Product.objects.filter(category=product.category).exclude(id=product.id)[:4]
+
+
+
+    variants = product.variants.all()
+    if not variants:  # Check if variants exist
+        # Handle the case where the product has no variants
+        return render(request, 'userside/singleproduct.html', {
+            'product': product,
+            'error_message': "This product has no available variants."
+        })
+
+
+
+
+
+
+    # Prepare variants data for the current product
+    variants_data = []
+    for variant in product.variants.all():
+        images = [{'image': img.image.url} for img in variant.images.all()]
+        variants_data.append({
+            'id': variant.id,
+            'colour': variant.colour,
+            'size': variant.size,
+            'type1': variant.type1,
+            'price': variant.price,
+            'description': product.description,
+            'stock': variant.stock,
+            'images': images,
+        })
+
+    # Set the default variant
+    default_variant = variants_data[0] if variants_data else {'images': [], 'price': 0, 'description': '', 'stock': 0}
+    
+    # Get the latest five reviews
+    reviews = Review.objects.filter(product=product).order_by('-created_at')[:5]
+    answered_questions = ProductQuestion.objects.filter(product=product, status='answered').exclude(answered_privately=True).order_by('-answered_at')[:5]
+    print('answered_questions :',answered_questions)
+
+    for question in answered_questions:
+        question.username = question.email.split('@')[0] 
+        
+        
+    unique_colors = set(variant['colour'] for variant in variants_data)
+    unique_sizes = set(variant['size'] for variant in variants_data)
+    unique_types = set(variant['type1'] for variant in variants_data)
+    materials = set(variant['type1'] for variant in variants_data)
+
+    # Retrieve the first image for each related product's default variant
+    related_products_with_images = []
+    for related_product in related_products:
+        first_image = None
+        if related_product.variants.exists():
+            first_variant = related_product.variants.first()
+            if first_variant.images.exists():
+                first_image = first_variant.images.first().image.url
+        related_products_with_images.append({
+            'product': related_product,
+            'first_image': first_image
+        })
+        print('answered_questions :',answered_questions)
+    # Add star range for star ratings in template
+    star_range = range(1, 6)
+
     context = {
         'product': product,
-        'products':products
+        'additional_images': additional_images,
+        'variants_data': variants_data,
+        'default_variant': default_variant,
+        'unique_colors': unique_colors,
+        'unique_sizes': unique_sizes,
+        'unique_types': unique_types,
+        'materials': materials,
+        'reviews': reviews,  # Limit to first five reviews
+        'related_products_with_images': related_products_with_images,
+        'star_range': star_range, 
+        'answered_questions': answered_questions,# Pass star range to template
+        'cart':cart,
+        'variant':variant
     }
-    
-    return render(request,'userside/singleproduct.html',context)
+
+    return render(request, 'userside/singleproduct.html', context)
 
 def custom_logout(request):
     logout(request)  # Log the user out
     request.session.flush()  # Clear the session data
-    return redirect('home')
+    return redirect('userlogin')
 
 def restricted_view(request):
     # Check if the user is authenticated
@@ -337,3 +450,226 @@ def custom_logoutadmin(request):
     logout(request)  # Log the user out
     messages.success(request, "You have been logged out successfully.")  # Optional: Add a success message
     return redirect('admin_login') 
+
+# def color_to_rgb(color):
+#     # Example mapping, you can expand this
+#     color_dict = {
+#         'red': (255, 0, 0),
+#         'blue': (0, 0, 255),
+#         'green': (0, 255, 0),
+#         'yellow': (255, 255, 0),
+#         # Add more colors as needed
+#     }
+#     return color_dict.get(color.lower(), (255, 255, 255))
+
+
+def profile(request):
+    user = request.user  # Get the logged-in user
+    addresses = Address.objects.filter(user=user, status='listed')   
+    default_address = addresses.filter(is_default=True).first()  # Get the default address
+    print("Default Address:", default_address)  
+
+    if request.method == 'POST':
+        # Update user details
+        username = request.POST.get('username', user.username)
+        if username:  # Ensure username is not empty or null
+           user.username = username
+           user.phone = request.POST.get('phone', user.phone)
+           user.dob = request.POST.get('dob', user.dob)
+           user.gender = request.POST.get('gender', user.gender)
+           user.city = request.POST.get('city', user.city)
+           user.country = request.POST.get('country', user.country)
+
+        if 'profile_image' in request.FILES:
+            user.profile_image = request.FILES['profile_image']
+        
+        user.save()
+        messages.success(request, "Profile updated successfully!")
+        return redirect('profile')
+
+    context = {
+        'user': user,
+        'addresses': addresses,
+        'default_address': default_address
+    }
+    return render(request, 'userside/profile.html', context)
+# @never_cache
+def profile_view(request):
+    user = request.user  # Assuming the user is logged in
+    default_address = Address.objects.filter(user=request.user, is_default=True).first()# Get default address
+
+
+    if request.method == 'POST':
+       
+        # Check if the profile_image is part of the POST request
+        if 'profile_image' in request.FILES:
+            # Update the user's profile image
+            user.profile_image = request.FILES['profile_image']
+            user.save()
+            messages.success(request, "Profile image updated successfully!")
+            return redirect('profile')  # Redirect to the profile page after updating
+
+    context = {
+        'user': user,
+        'default_address': default_address
+
+    }
+    return render(request, 'userside/profile.html', context)
+
+
+def restpassword(request):
+    old = ''
+    new = ''
+    comform = ''
+    if request.method=='POST':
+        old=request.POST.get('oldPassword')
+        new=request.POST.get('newPassword')
+        comform=request.POST.get('confirmNewPassword')
+        
+        print('oldpass:',old)
+        print('newpass:',new)
+        print('compass:',comform)
+        
+        if new!= comform:
+            print('not equl')
+            messages.error(request,'password deos not match')
+            return render(request, 'userside/profile.html', {
+                'oldPassword': old,
+                'newPassword': new,
+                'confirmNewPassword': comform,
+            })
+        
+        if len(new) < 6:
+            messages.error(request, 'New password must be at least 6 characters long.')
+            return render(request, 'userside/profile.html', {
+                'oldPassword': old,
+                'newPassword': new,
+                'confirmNewPassword': comform,
+            })
+        
+        user = authenticate(username=request.user.username, password=old)
+        
+        if user is not None:
+            user.set_password(new)
+            user.save()
+            update_session_auth_hash(request, user)   
+              
+             
+            return redirect('profile')
+        else:
+             messages.error(request, 'Old password is incorrect.')
+             return render(request, 'userside/profile.html', {
+                'oldPassword': old,
+                'newPassword': new,
+                'confirmNewPassword': comform,
+            })
+    return render(request, 'userside/profile.html')  # Render your template as needed
+
+ 
+
+def add_address(request):
+    address = Address.objects.filter(user=request.user)
+
+    if request.method=='POST':
+        address_line1 = request.POST.get('addressLine1')
+        
+        city = request.POST.get('city')
+        state = request.POST.get('state')
+        postalCode = request.POST.get('postalCode')
+        country = request.POST.get('country')
+        phoneNumber = request.POST.get('phoneNumber')
+        
+        Address.objects.create(
+            user=request.user,
+            address_line1=address_line1,
+            
+            city=city,
+            state=state,
+            postal_code=postalCode,
+            country=country,
+            phone_number=phoneNumber,
+          
+        )
+        messages.success(request, 'Address added successfully!')
+        return redirect('profile') 
+        context={
+             'address': address
+        }
+
+    return render(request,'userside/profile.html')
+
+def set_default_address(request):
+    if request.method == 'POST':
+        address_id = request.POST.get('default_address')
+        print("Address ID:", address_id)  # Debugging statement to see what was received
+        
+        if address_id:
+            # Set all addresses to is_default=False for the current user
+            Address.objects.filter(user=request.user).update(is_default=False)
+            
+            # Set the selected address to is_default=True
+            Address.objects.filter(id=address_id, user=request.user).update(is_default=True)
+            print(f"Address with ID {address_id} set to default.")
+        else:
+            print("No address selected")  # Optional debugging for the case when nothing is submitted
+
+    return redirect('profile')
+def edit_address(request , address_id):
+    address = get_object_or_404(Address, id=address_id, user=request.user)
+    # address = get_object_or_404(Address, id=address_id)
+    print('hi',address_id)
+    if request.method =='POST':
+        print('hi')
+        address.address_line1 = request.POST.get('addressLine1', address.address_line1)
+        print(f"Updating address_line1 to: {address.address_line1}") 
+        address.city = request.POST.get('city', address.city)
+        address.state = request.POST.get('state', address.state)
+        address.postal_code = request.POST.get('postalCode', address.postal_code)
+        address.country = request.POST.get('country', address.country)
+        address.phone_number = request.POST.get('phoneNumber', address.phone_number)
+
+        address.save()
+        print( 'new',address)
+        messages.success(request, "Address updated successfully!")
+        show_messages = True
+        return redirect('profile')  # Redirect to the profile page or another appropriate page
+
+    context={
+      'address':address ,
+      
+    }
+    return render(request,'userside/profile.html',context)
+
+def unlist_address(request, address_id):
+    address = get_object_or_404(Address, id=address_id, user=request.user)
+    address.status = 'unlisted'
+    address.save()
+    return redirect('profile') 
+
+def restore_all_addresses(request):
+    Address.objects.filter(user=request.user).update(status='listed')
+    return redirect('profile') 
+
+
+def add_to_cart(request, variant_id):
+    print('iiii',variant_id)
+    variant = get_object_or_404(Variant, id=variant_id)
+    
+    # Get or create the cart for the user
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    
+    # Get or create the cart item
+    cart_item, item_created = CartItem.objects.get_or_create(cart=cart, variant=variant)
+    
+    if not item_created:
+        # If the item already exists, increment the quantity
+        cart_item.quantity += 1
+        cart_item.save()
+    
+    return redirect('cart')
+
+def view_cart(request):
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    cart_items = cart.items.all()  # Fetch related CartItems for this cart
+    
+    return render(request, 'userside/cart.html', {'cart': cart, 'cart_items': cart_items})
