@@ -1,3 +1,6 @@
+{% extends 'userside/base.html' %}
+
+{% block content %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -170,7 +173,42 @@
             height: auto;
             opacity: 0.7; /* Slight opacity for the GIF itself */
         }
-        
+        /* cart.css */
+
+.cart-content {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.cart-item img {
+    width: 80px;
+    height: 80px;
+}
+
+.cart-item h2, .cart-item p {
+    margin: 5px 0;
+}
+
+.button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
     </style>
 </head>
 <body>
@@ -180,39 +218,68 @@
          
 
 
-        <div class="cart-content">
-            {% if cart.items.count == 0 %}
+          <div class="cart-content">
+            {% if cart_data %}
+                {% for item in cart_data %}
+                    <div class="cart-item" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 15px;">
+                        {% if item.first_image %}
+                            <img src="{{ item.first_image }}" alt="{{ item.product_name }}" style="width: 80px; height: 80px;">
+                        {% else %}
+                            <img src="{% static 'images/default.jpg' %}" alt="No Image" style="width: 80px; height: 80px;">
+                        {% endif %}
+                        
+                        <div>
+                            <h2>{{ item.product_name }}</h2>
+                            <p>Color: {{ item.color }}</p>
+                            <p>Size: {{ item.size }}</p>
+                            <p>Type: {{ item.type }}</p>
+                            <p>Price: ${{ item.price }}</p>
+                        </div>
+                        
+                        <div>
+                            <form method="POST" action="{% url 'update_cart' item.cart_item_id %}">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="decrease">-</button>
+                                <span>{{ item.quantity }}</span>
+                                <button type="submit" name="action" value="increase">+</button>
+                            </form>
+                        </div>
+                        
+                        <p>Total: ${{ item.total_price }}</p>
+                        <form method="POST" action="{% url 'delete_cart_item' item.cart_item_id %}">
+                            {% csrf_token %}
+                            <button type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#00ff00" viewBox="0 0 24 24" style="cursor: pointer;">
+                                <path d="M3 6h18v2h-1v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8H3V6zm5 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2h5v2H3V6h5zm2 0h4V4h-4v2zM8 10h2v10H8V10zm4 0h2v10h-2V10zm4 0h2v10h-2V10z"/>
+                            </svg>
+                            </button>
+                        </form>
+                    </div>
+                {% endfor %}
+                
+                <div class="cart-total">
+                    <p>Grand Total: ${{ cart_total }}</p>
+                    <button class="button">Proceed to Checkout</button>
+                </div>
+            {% else %}
                 <p>Your cart is empty.</p>
                 <img src="{% static 'images/empty.gif' %}" alt="Empty Cart" class="centered-gif" style='margin-left: 110px;'/>
-            {% else %}
-                <!-- Code to display cart items here -->
-                {% for item in cart_items %}
-                <div class="cart-item">
-                    <div class="cart-item-details">
-                        <img src="{{ item.variant.image.url }}" alt="{{ item.variant.name }}">
-                        <div>
-                            <h2>{{ item.variant.name }}</h2>
-                            <p>Quantity: {{ item.quantity }}</p>
-                            <p>Price: ${{ item.variant.price }}</p>
-                        </div>
-                    </div>
-                    <p class="cart-item-total">Total: ${{ variant.price }}</p>
-                </div>
-            {% endfor %}
-            <div class="cart-total">
-                <p>Grand Total: ${{ 'variant.price' }}</p>
-                <button class="button">Proceed to Checkout</button>
-            </div>
             {% endif %}
-        </div>
+        </div>  
+  
+        
 
 
 
 
+<!-- cart.html -->
+ 
 
-            
-         
-    </div>
+
+
+
+ 
+
 
 </body>
 </html>
+{% endblock %}

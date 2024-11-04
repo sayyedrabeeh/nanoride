@@ -19,6 +19,9 @@ from django.db.models import Sum
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
+
+User = get_user_model()
+
 @never_cache
 @login_required(login_url='admin_login')
 def users(request):

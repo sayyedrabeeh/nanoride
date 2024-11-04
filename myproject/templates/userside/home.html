@@ -1166,7 +1166,7 @@ button:hover {
     display: none; /* Hide by default */
     position: absolute;
     top: 100%; /* Position below the menu item */
-    left: 0;
+    left: -50px;
     background-color: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     padding: 10px;
@@ -1189,15 +1189,36 @@ button:hover {
 .dropdown:hover .dropdown-content {
     display: block; /* Show dropdown on hover */
 }
+.product-card .product-image {
+    position: relative;
+}
 
+.product-card .primary-image {
+    display: block;
+}
 
+.product-card .secondary-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.product-card:hover .primary-image {
+    opacity: 0;
+}
+
+.product-card:hover .secondary-image {
+    opacity: 1;
+}
+ 
     </style>
 </head>
 <body>
-
-    
-
-
+ 
     <section class="hero">
         <div class="hero-overlay">
             <h1>Welcome to NANORIDE</h1>
@@ -1286,26 +1307,40 @@ button:hover {
     <!-- New Arrivals Section -->
     <section class="container py-5">
         <h2 style='color: green'>New Arrivals</h2>
-		<div class="row g-3">
-			{% for product in products %}
-				<div class="col-6 col-md-3">
-					<div class="product-card">
-						{% if product.variants.first and product.variants.first.images.first %}
-							<img src="{{ product.variants.first.images.first.image.url }}" alt="{{ product.name }}">
-						{% else %}
-							<img src="static/images/default.jpg" alt="No Image Available">  <!-- Fallback image -->
-						{% endif %}
-						<div class="product-info">
-							<div class="product-name">{{ product.name }}</div>
-							<div class="product-price">${{ product.variants.first.price }}</div>  <!-- Show price of first variant -->
-							<button class="add-to-cart-btn">Add to cart</button>
-						</div>
-					</div>
-				</div>
-			{% endfor %}
-		</div>
-		
+		   
+		  
              <!-- Additional product cards as needed -->
+
+
+
+ 
+             <div class="row g-3">
+                {% for product in products %}
+                    <div class="col-6 col-md-3">
+                        <div class="product-card">
+                            <div class="product-image">
+                                {% if product.variants.first and product.variants.first.images.first %}
+                                    <img src="{{ product.variants.first.images.first.image.url }}" alt="{{ product.name }}" class="primary-image">
+                                {% else %}
+                                    <img src="static/images/default.jpg" alt="No Image Available" class="primary-image"> <!-- Fallback image -->
+                                {% endif %}
+            
+                                {% if product.variants.first.images.all|length > 1 %}
+                                    <img src="{{ product.variants.first.images.all.1.image.url }}" alt="{{ product.name }}" class="secondary-image">
+                                {% endif %}
+                            </div>
+            
+                            <div class="product-info">
+                                <div class="product-name">{{ product.name }}</div>
+                                <div class="product-price">${{ product.variants.first.price }}</div>  <!-- Show price of first variant -->
+                                <button class="add-to-cart-btn">Add to cart</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+
 </section>
 
 <div class="banner-left">
@@ -1318,7 +1353,7 @@ button:hover {
 
 <section style="margin:20px">
 	 
-	<div class="grid-container">
+	{% comment %} <div class="grid-container">
 		{% for product in products %}
 			{% for variant in product.variants.all %}
 				<div class="grid-item">
@@ -1338,12 +1373,43 @@ button:hover {
 				</div>
 			{% endfor %}
 		{% endfor %}
-	</div>
+	</div> {% endcomment %}
 	
 	
 
     <!-- Add more grid items as needed -->
  
+
+    <div class="grid-container">
+        {% for product in products %}
+            {% for variant in product.variants.all %}
+                <div class="grid-item">
+                    <div class="product-card">
+                        <span class="discount-tag">Sale</span>
+    
+                        <div class="product-image-container">
+                            {% if variant.images.count > 1 %}
+                                <img src="{{ variant.images.all.0.image.url }}" alt="Product Image" class="primary-image"> <!-- First image -->
+                                <img src="{{ variant.images.all.1.image.url }}" alt="Product Image" class="secondary-image"> <!-- Second image -->
+                            {% else %}
+                                <img src="{% static 'images/default.jpg' %}" alt="Default Image" class="primary-image"> <!-- Placeholder image if no second image -->
+                            {% endif %}
+                        </div>
+    
+                        <div class="product-info">
+                            <h3 class="item-title">{{ product.name }}</h3>
+                            <p class="item-price">${{ variant.price }}</p>
+                            <button class="cart-button">Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    
+
+
+
 </section>
 
 <div class="banner-center">

@@ -14,6 +14,10 @@ from django.views.decorators.csrf import csrf_protect
 import random
 from django.views.decorators.csrf import csrf_exempt
 import time
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import json
 from django.contrib.auth import logout
 from django.contrib.auth import password_validation
 from django.contrib.auth import authenticate, login
@@ -30,14 +34,13 @@ from django.views.generic import TemplateView
 from django.contrib import messages
 from django.http import JsonResponse
 import json
-from .models import ProductQuestion,CustomUser,Address,Cart
+from .models import ProductQuestion,CustomUser,Address,Cart,CartItem
 from authentication.models import CustomUser
 from django.contrib.auth.views import LoginView
 from management.models import Review 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
-from django.contrib.auth import get_user_model
 from django.contrib.auth import update_session_auth_hash
 
 
@@ -331,7 +334,7 @@ def singleproduct(request, id):
     cart, created = Cart.objects.get_or_create(user=request.user)
 
 
-
+    videos = product.videos.all() 
     product = get_object_or_404(Product, id=id)
     additional_images = product.additional_images.all()
     related_products = Product.objects.filter(category=product.category).exclude(id=product.id)[:4]
@@ -372,7 +375,7 @@ def singleproduct(request, id):
     # Get the latest five reviews
     reviews = Review.objects.filter(product=product).order_by('-created_at')[:5]
     answered_questions = ProductQuestion.objects.filter(product=product, status='answered').exclude(answered_privately=True).order_by('-answered_at')[:5]
-    print('answered_questions :',answered_questions)
+    
 
     for question in answered_questions:
         question.username = question.email.split('@')[0] 
@@ -395,7 +398,7 @@ def singleproduct(request, id):
             'product': related_product,
             'first_image': first_image
         })
-        print('answered_questions :',answered_questions)
+        
     # Add star range for star ratings in template
     star_range = range(1, 6)
 
@@ -413,10 +416,22 @@ def singleproduct(request, id):
         'star_range': star_range, 
         'answered_questions': answered_questions,# Pass star range to template
         'cart':cart,
-        'variant':variant
+        'variants':variants,
+        'videos': videos 
     }
 
     return render(request, 'userside/singleproduct.html', context)
+
+
+
+
+
+ 
+
+
+
+
+
 
 def custom_logout(request):
     logout(request)  # Log the user out
@@ -651,25 +666,127 @@ def restore_all_addresses(request):
     return redirect('profile') 
 
 
-def add_to_cart(request, variant_id):
-    print('iiii',variant_id)
-    variant = get_object_or_404(Variant, id=variant_id)
-    
-    # Get or create the cart for the user
-    cart, created = Cart.objects.get_or_create(user=request.user)
-    
-    # Get or create the cart item
-    cart_item, item_created = CartItem.objects.get_or_create(cart=cart, variant=variant)
-    
-    if not item_created:
-        # If the item already exists, increment the quantity
-        cart_item.quantity += 1
-        cart_item.save()
-    
-    return redirect('cart')
+ 
 
+# @login_required
+# def add_to_cart(request, id):
+#     print('id:',id)
+#     variant = get_object_or_404(Variants, id=id)
+#     cart, created = Cart.objects.get_or_create(user=request.user)
+#     cart_item, item_created = CartItem.objects.get_or_create(cart=cart, variant=variant)
+    
+#     if not item_created:
+#         cart_item.quantity += 1
+#         cart_item.save()
+    
+#     return redirect('cart')
+
+
+def add_to_cart(request):
+    if request.method == 'POST':
+        variant_id = request.POST.get('variant_id')
+        quantity = int(request.POST.get('quantity', 1))
+
+        # Fetch the selected variant
+        variant = get_object_or_404(Variants, id=variant_id)
+        
+        # Check stock availability
+        if quantity > variant.stock:
+            messages.error(request, 'The requested quantity is not available.')
+            return redirect('product_detail', product_id=variant.product.id)
+
+        # Get or create the cart for the user
+        cart, created = Cart.objects.get_or_create(user=request.user)
+
+        # Add or update the cart item
+        cart_item, item_created = CartItem.objects.get_or_create(cart=cart, variant=variant)
+
+        if not item_created:
+            cart_item.quantity += quantity
+            cart_item.save()
+        else:
+            cart_item.quantity = quantity
+            cart_item.save()
+
+        messages.success(request, 'Item added to cart successfully.')
+        return redirect('cart')
+    else:
+        return redirect('home') 
+ 
 def view_cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
-    cart_items = cart.items.all()  # Fetch related CartItems for this cart
+    cart_items = cart.items.all()  # Get all cart items for this user
     
-    return render(request, 'userside/cart.html', {'cart': cart, 'cart_items': cart_items})
+    cart_total = 0
+    cart_data = []
+
+    for item in cart_items:
+        variant = item.variant
+        item_total = variant.price * item.quantity
+        cart_total += item_total
+        
+        # Get the first image of this variant if it exists
+        first_image = variant.images.first().image.url if variant.images.exists() else None
+        
+        cart_data.append({
+            'product_name': variant.product.name,
+            'color': variant.colour,
+            'size': variant.size,
+            'type': variant.type1,
+            'price': variant.price,
+            'quantity': item.quantity,
+            'total_price': item_total,
+            'first_image': first_image,
+            'cart_item_id': item.id
+        })
+
+    return render(request, 'userside/cart.html', {
+        'cart_data': cart_data,
+        'cart_total': cart_total
+    })
+def update_cart(request, item_id):
+    cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+    
+    if request.POST.get('action') == 'increase':
+        cart_item.quantity += 1
+    elif request.POST.get('action') == 'decrease' and cart_item.quantity > 1:
+        cart_item.quantity -= 1
+    
+    cart_item.save()
+    return redirect('cart')
+
+# def delete_cart_item(request, item_id):
+#     cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+#     cart_item.delete()
+#     return redirect('cart')
+
+@method_decorator(csrf_exempt, name='dispatch')  # Only if you're not using CSRF tokens
+def update_cart_item(request, item_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            quantity = data.get('quantity')
+            
+            # Here you would update the quantity in your database
+            # Assuming you have a CartItem model
+            cart_item = CartItem.objects.get(id=item_id)
+            cart_item.quantity = quantity
+            cart_item.save()
+
+            return JsonResponse({'message': 'Quantity updated successfully!'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+
+
+def delete_cart_item(request, item_id):
+    cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+    cart_item.delete()
+    messages.success(request, 'Item removed from cart successfully.')
+    return redirect('cart')
+
+
+
+def checkout(request):
+    return render(request,'userside/checkout.html')

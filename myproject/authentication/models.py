@@ -147,5 +147,9 @@ class CartItem(models.Model):
     variant = models.ForeignKey(Variants, on_delete=models.CASCADE)  # Changed from Product to Variant
     quantity = models.PositiveIntegerField(default=1)
 
+    def item_total(self):
+        return self.variant.price * self.quantity 
+
+
     def __str__(self):
         return f"{self.variant} (x{self.quantity})"

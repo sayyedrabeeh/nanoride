@@ -19,7 +19,7 @@
         body {
             background-color: #000;
             color: #e0f7e8; /* Light green color */
-            font-family: 'Creepster', cursive;
+            {% comment %} font-family: 'Creepster', cursive; {% endcomment %}
             margin-bottom: 20px;
         }
         
@@ -35,7 +35,12 @@
             top: 0;
             z-index: 1000;
         }
-        
+        h1,h2,h3,h4,h5,h6{
+			        
+			color: #e0f7e8; /* Light green color */
+			font-family: 'Creepster', cursive; /* or your desired font */
+			margin-bottom: 20px; /* Adjust as needed */
+   }
         .navbar-logo .sidebar-title {
             color: #e0f7e8; /* Light green color */
             font-size: 35px;
@@ -68,6 +73,18 @@
         .dropdown:hover .dropdown-content {
             display: block;
         }
+        {% comment %} .dropdown-content {
+            display: none; /* Hide by default */
+            position: absolute;
+            top: 100%; /* Position below the menu item */
+            left: -50px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 150px;
+            z-index: 100;
+        } {% endcomment %}
         
         .dropdown-content a {
             color: #e0f7e8;

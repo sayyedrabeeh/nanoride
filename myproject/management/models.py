@@ -131,7 +131,13 @@ class VariantImage(models.Model):
 
     def __str__(self):
         return f'Image for Variant: {self.variant.type1} in {self.variant.colour}'
-
+class ProductVideo(models.Model):
+    product = models.ForeignKey(Product, related_name='videos', on_delete=models.CASCADE)
+    video = models.FileField(upload_to='product_videos/',blank=True, null=True)
+    title = models.CharField(max_length=100, blank=True, null=True)
+    
+    def __str__(self):
+        return f'Video for {self.product.name}'
 class Review(models.Model):
     product = models.ForeignKey('Product', related_name='reviews', on_delete=models.CASCADE)
     name = models.CharField(max_length=100)

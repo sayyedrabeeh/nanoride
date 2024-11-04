@@ -25,7 +25,12 @@ urlpatterns = [
     path('set-default-address/', views.set_default_address, name='default_address'),
     path('unlist-address/<int:address_id>/', views.unlist_address, name='unlist_address'),
     path('restore-all-addresses/', views.restore_all_addresses, name='restore_all_addresses'),
-    path('add-to-cart/<int:variant_id>/', views.add_to_cart, name='add_to_cart'),
+    path('add-to-cart/', views.add_to_cart, name='add_to_cart'),
     path('cart/', views.view_cart, name='cart'),
+    path('update_cart/<int:item_id>/', views.update_cart, name='update_cart'), 
+    path('delete_cart_item/<int:item_id>/', views.delete_cart_item, name='delete_cart_item'),
+    path('update-cart-item/<int:item_id>/', views.update_cart_item, name='update_cart_item'),
+    path('checkout/', views.checkout, name='checkout'),
+
 
  ]

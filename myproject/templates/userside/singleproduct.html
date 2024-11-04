@@ -313,7 +313,7 @@ h1,h2,h3,h4,h5,h6{
     display: none; /* Hide by default */
     position: absolute;
     top: 100%; /* Position below the menu item */
-    left: 0;
+    left: -50px;
     background-color: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     padding: 10px;
@@ -952,68 +952,78 @@ footer {
 		<p class="stock" id="stock" style="padding: 5px; font-size: 16px;margin-bottom:20px font-weight: bold; border: 2px solid #28a745; color: #28a745; border-radius: 5px; display: inline-block; margin-top: 5px;">
 			In Stock: {{ default_variant.stock }}
 		</p>
+
 		<p class="description" id="description" style="margin-top:10px;">{{ product.description }}</p>
 
-        
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <div class="variants" style="display: flex; flex-direction: column; gap: 15px; max-width: 400px; margin:30px; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                        <label for="color">Color:</label>
+                        <select name="color" id="color" onchange="updateVariant()">
+                            {% for color in unique_colors %}
+                                <option value="{{ color }}" {% if color == default_variant.colour %}selected{% endif %}>
+                                    {{ color }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        
+                        <label for="size">Size:</label>
+                        <select name="size" id="size" onchange="updateVariant()">
+                            {% for size in unique_sizes %}
+                                <option value="{{ size }}" {% if size == default_variant.size %}selected{% endif %}>
+                                    {{ size }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        
+                        <label for="type">Type:</label>
+                        <select name="type" id="type" onchange="updateVariant()">
+                            {% for type in unique_types %}
+                                <option value="{{ type }}" {% if type == default_variant.type1 %}selected{% endif %}>
+                                    {{ type }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                
+                    <!-- Hidden input to store selected variant ID -->
+                    <input type="hidden" id="selected_variant_id" name="selected_variant_id" value="{{ default_variant.id }}">
+                </form>
+                
+                {% comment %} <div class="quantity-selector" style="margin: 20px 0;">
+                    <label for="quantity">Quantity:</label>
+                    <button type="button" onclick="changeQuantity(-1)">-</button>
+                    <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ default_variant.stock }}" style="width: 50px;">
+                    <button type="button" onclick="changeQuantity(1)">+</button>
+                </div> {% endcomment %}
+                
+                <div class="button-container">
+                    <div class="variant-item">
+                        <form method="POST" action="{% url 'add_to_cart' %}">
+                            {% csrf_token %}
 
-        <!-- Variant Options -->
-        <form method="POST" action="">
-            {% csrf_token %}
-			<div class="variants" style="display: flex; flex-direction: column; gap: 15px; max-width: 400px; margin:30px; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-				<label for="color">Color:</label>
-				<select name="color" id="color" onchange="updateVariant()">
-					{% for color in unique_colors %}
-						<option value="{{ color }}" {% if color == default_variant.colour %}selected{% endif %}>
-							{{ color }}
-						</option>
-					{% endfor %}
-				</select>
-			
-				<label for="size">Size:</label>
-				<select name="size" id="size" onchange="updateVariant()">
-					{% for size in unique_sizes %}
-						<option value="{{ size }}" {% if size == default_variant.size %}selected{% endif %} data-color="{{ color }}">
-							{{ size }}
-						</option>
-					{% endfor %}
-				</select>
-			
-				<label for="type">Type:</label>
-				<select name="type" id="type" onchange="updateVariant()">
-					{% for type in unique_types %}
-						<option value="{{ type }}" {% if type == default_variant.type1 %}selected{% endif %}>
-							{{ type }}
-						</option>
-					{% endfor %}
-				</select>
-			</div>
-			
-         <!-- Add to Cart Button -->
-            <div class="button-container">
-                <button type="button" class="add-to-cart-button" onclick="toggleCart()">Add to Cart</button>
-                <button type="button" class="shop-now-button">Shop Now</button>
-            </div
-        </form>
+                            <!-- Hidden input for the selected variant ID for the cart -->
+                            <input type="hidden" id="cart_variant_id" name="variant_id"  value="{{ default_variant.id }}">
+                            
 
+                            <button type="submit" class="add-to-cart-button">Add to Cart</button>
+                        </form>
+                    </div>
+                    <button type="button" class="shop-now-button">Shop Now</button>
+                </div>
+ 
+
+
+  
+
+
+
+
+</div> 
     </div>
-</div>
 
-<div id="cart" class="offcanvas">
-    <div class="offcanvas-header">
-        <h2>Shopping Cart</h2>
-        <button type="button" onclick="toggleCart()">Close</button>
-    </div>
-    <div class="offcanvas-body">
-        <div id="cart-items">
-            <!-- Cart items will be dynamically added here -->
-        </div>
-        <div class="cart-total">
-            <strong>Total: <span id="cart-total">0</span></strong>
-        </div>
-        <button type="button" class="view-cart-button">View Cart</button>
-    </div>
-</div>
 
+ 
 <!-- Product Specifications Section -->
 <section class="product-specifications">
     <h2>Product Specifications</h2>
@@ -1168,6 +1178,77 @@ footer {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.2.0/decimal.min.js"></script>
 
 <script>
+
+    const variants = [
+    {% for variant in variants %}
+    {
+        id: {{ variant.id }},
+        color: "{{ variant.color }}",
+        size: "{{ variant.size }}",
+        type: "{{ variant.type1 }}",
+        stock: {{ variant.stock }}
+    },
+    {% endfor %}
+];
+
+{% comment %} function updateVariant() {
+    const selectedColor = document.getElementById('color').value;
+    const selectedSize = document.getElementById('size').value;
+    const selectedType = document.getElementById('type').value;
+
+    // Find the variant that matches the selected options
+    const selectedVariant = variants.find(variant => 
+        variant.color === selectedColor && 
+        variant.size === selectedSize && 
+        variant.type === selectedType
+    );
+
+    // Update the hidden variant ID and max quantity based on the selected variant
+    if (selectedVariant) {
+        document.getElementById('variant_id').value = selectedVariant.id;
+        document.getElementById('quantity').max = selectedVariant.stock; // Update max stock
+        if (parseInt(document.getElementById('quantity').value) > selectedVariant.stock) {
+            document.getElementById('quantity').value = selectedVariant.stock; // Adjust quantity if needed
+        }
+    }
+} {% endcomment %}
+
+{% comment %} function updateVariant() {
+    const selectedColor = document.getElementById('color').value;
+    const selectedSize = document.getElementById('size').value;
+    const selectedType = document.getElementById('type').value;
+
+    // Initialize the selected variant ID to null
+    let selectedVariantId = null;
+
+    // Loop through the variants to find the matching ID
+    {% for variant in variants %}
+        if ("{{ variant.color }}" === selectedColor && "{{ variant.size }}" === selectedSize && "{{ variant.type1 }}" === selectedType) {
+            selectedVariantId = "{{ variant.id }}"; // Set the ID of the selected variant
+        }
+    {% endfor %}
+
+    // Set the hidden input fields with the selected variant ID
+    document.getElementById('selected_variant_id').value = selectedVariantId;
+    document.getElementById('cart_variant_id').value = selectedVariantId;
+} {% endcomment %}
+
+function changeQuantity(change) {
+    const quantityInput = document.getElementById('quantity');
+    let currentQuantity = parseInt(quantityInput.value);
+    const newQuantity = currentQuantity + change;
+
+    // Ensure quantity stays within limits
+    if (newQuantity >= 1 && newQuantity <= parseInt(quantityInput.max)) {
+        quantityInput.value = newQuantity;
+    }
+}
+
+
+
+
+
+
    const variantsData = {{ variants_data|safe }}; // Ensure this is properly passed to JavaScript
 
 function updateVariant() {
@@ -1180,7 +1261,8 @@ function updateVariant() {
     const priceElement = document.getElementById('price');
     const descriptionElement = document.getElementById('description');
     const stockElement = document.getElementById('stock');
-
+                                                                               // Reference to the hidden input
+    const selectedVariantIdInput = document.getElementById('cart_variant_id');
     // Clear current options and images
     sizeSelect.innerHTML = '';
     thumbnailImagesContainer.innerHTML = ''; // Clear existing thumbnails
@@ -1221,6 +1303,7 @@ function updateVariant() {
         priceElement.textContent = `$${selectedVariant.price}`; // Update price
         descriptionElement.textContent = selectedVariant.description; // Update description
         stockElement.textContent = `In Stock: ${selectedVariant.stock}`; // Update stock
+        selectedVariantIdInput.value = selectedVariant.id;
 
         // Populate Thumbnail Images
         selectedVariant.images.forEach(imgObj => {
@@ -1239,8 +1322,9 @@ function updateVariant() {
         priceElement.textContent = '';
         descriptionElement.textContent = '';
         stockElement.textContent = '';
+        selectedVariantIdInput.value = '';
     }
-}
+} 
 
 function updateMainImage(imageSrc) {
     const mainImage = document.getElementById('main-image');
@@ -1430,6 +1514,13 @@ function removeFromCart(productId) {
     cart = cart.filter(item => item.id !== productId);
     updateCartDisplay();
 }
+
+function updateMainImage(imageSrc) {
+    document.getElementById('main-image').src = imageSrc;
+}
+
+
+
 
 
 </script>
