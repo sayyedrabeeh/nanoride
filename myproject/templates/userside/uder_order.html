@@ -1,0 +1,194 @@
+{% extends 'userside/base.html' %}
+ 
+{% block content %}
+{% load static %}
+<style>
+    .order-page {
+        padding: 20px;
+        background-color: #1b1b1b; /* Dark background */
+        color: #e0f7e8; /* Light green color */
+        border-radius: 10px; /* Rounded corners for the entire page */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+    }
+
+    .order-summary,
+    .order-items {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #282828; /* Slightly lighter background for summary */
+        border-radius: 10px; /* Rounded corners */
+        border: 1px solid #444; /* Border for better separation */
+    }
+
+    h1, h2, h3, h4 {
+        margin: 0;
+        font-family: 'Creepster', cursive; /* Custom font for headings */
+    }
+
+    .order-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between; /* Space between image and info */
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: #333; /* Item background */
+        border-radius: 8px; /* Rounded corners */
+        transition: background-color 0.3s; /* Smooth transition for hover effect */
+    }
+
+    .order-item:hover {
+        background-color: #444; /* Change background on hover */
+    }
+
+    .item-image {
+        width: 80px; /* Adjust size as needed */
+        height: auto;
+        margin-right: 15px;
+        border-radius: 5px; /* Rounded corners for images */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Shadow for images */
+    }
+
+    .item-info {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column; /* Stack item info vertically */
+    }
+
+    .order-total {
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: 20px;
+    }
+
+    .order-actions {
+        margin-top: 10px;
+        text-align: right; /* Align actions to the right */
+    }
+
+    .cancel-button, .view-button {
+        padding: 10px 20px;
+        background-color: #dc3545; /* Red background for cancel button */
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-left: 10px; /* Space between buttons */
+        transition: background-color 0.3s; /* Smooth transition for hover effect */
+    }
+
+    .cancel-button:hover, .view-button:hover {
+        background-color: #c82333; /* Darker red on hover */
+    }
+
+    /* View button styles */
+    .view-button {
+        background-color: #28a745; /* Green background for view button */
+    }
+
+    .view-button:hover {
+        background-color: #218838; /* Darker green on hover */
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .item-image {
+            width: 60px; /* Smaller image for mobile */
+        }
+
+        .order-item {
+            flex-direction: column; /* Stack items vertically */
+            align-items: flex-start; /* Align items to the start */
+        }
+
+        .order-total {
+            font-size: 18px; /* Adjust font size on mobile */
+        }
+
+        .cancel-button, .view-button {
+            width: 100%; /* Full width button on mobile */
+            margin-top: 10px; /* Spacing above button */
+        }
+    }
+    
+</style>
+
+ 
+    <div class="order-page">
+        <h1>Order Details</h1>
+    
+        <div class="order-summary">
+            <h2>Order #{{ order.order_id }}</h2>
+            <p>Date: {{ order.created_at|date:"F j, Y" }}</p>
+            <p>Status: {{ order.payment_status }}</p>
+        </div>
+    
+        <div class="order-items">
+            <h3>Items Ordered:</h3>
+            {% if order_items %}
+            <ul>
+                {% for item in order_items %}
+                    <li class="order-item">
+                        {% if item.variants.images.exists %}
+                            <img src="{{ item.variants.images.first.image.url }}" alt="{{ item.variants.name }}" class="item-image">
+                        {% else %}
+                            <img src="{% static 'images/default-image.png' %}" alt="Default Image" class="item-image">
+                        {% endif %}
+                        <div class="item-info">
+                            <h4>{{ item.variants.name }}</h4>
+                            <p>Quantity: {{ item.quantity }}</p>
+                            <p>Price: ${{ item.price }}</p>
+                            <p>Status: {{ item.status }}</p> <!-- Display current status -->
+                            <div class="order-actions">
+                                <button class="view-button">View Details</button>
+        
+                                {% if item.status == "Order Confirmed" %}
+                                    <button class="return-button" onclick="confirmReturnOrder({{ item.orderitem_id }})">Return</button>
+                                {% elif item.status == "Return Approved" %}
+                                    <button class="return-button disabled">Return Approved</button>
+                                {% elif item.status == "Cancelled" %}
+                                    <button class="cancel-button disabled">Cancelled</button>
+                                {% elif item.status == "Return Requested" %}
+                                    <button class="return-button disabled">Return Requested</button>
+                                {% else %}
+                                    <button class="cancel-button" onclick="confirmCancelOrder({{ item.orderitem_id }})">Cancel Order</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+         {% else %}
+            <p>No items found in this order.</p>
+        {% endif %}
+        
+        </div>
+    </div>
+    
+</div>
+
+<script>
+    function confirmCancelOrder(orderId) {
+        if (confirm("Are you sure you want to cancel this order?")) {
+            // Implement the cancel order functionality here
+            // This could involve an AJAX request to your Django view
+            window.location.href = `/cancel_order/${orderId}/`; // Example redirection
+        }
+    }
+
+    function confirmReturnOrder(orderItemId) {
+        if (confirm("Are you sure you want to return this item?")) {
+            // Proceed with the return operation, e.g., send a request to the server
+            window.location.href = `/management/update-status/${orderItemId}/Return Requested/`; // Update URL as per your URL pattern
+        }
+    }
+    
+    function confirmCancelOrder(orderItemId) {
+        if (confirm("Are you sure you want to cancel this order?")) {
+            // Proceed with the cancel operation, e.g., send a request to the server
+            window.location.href = `/management/update-status/${orderItemId}/Cancelled/`; // Update URL as per your URL pattern
+        }
+    }
+    
+</script>
+{% endblock %}

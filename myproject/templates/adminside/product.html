@@ -325,6 +325,7 @@
                             <th style="width: 20%; word-wrap: break-word;">Description</th>
                             <th style="width: 15%;">Image</th>
                             <th style="width: 10%;">Stock</th>
+                            <th style="width: 10%;">Video</th> 
                             <th style="width: 10%;">Status</th>
                             <th style="width: 5%;">Actions</th>
                         </tr>
@@ -352,6 +353,15 @@
                             </td>
                            
                             <td>{{ i.total_stock|default:0 }}</td>
+                            <td>
+                                {% if i.video %}
+                                    <a href="{{ i.video.url }}" target="_blank">
+                                        <i class="fas fa-play-circle" style="font-size: 20px; color: #007bff;"></i>
+                                    </a>
+                                {% else %}
+                                    <span>No Video</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 <span class="status" style="font-weight: bold; color: {% if i.status == 'listed' %} green {% else %} red {% endif %};">
                                     {{ i.status }}
@@ -436,9 +446,13 @@
                                 <label for="stock">Stock</label>
                                 <input type="number" class="form-control" name="stock" id="stock" placeholder="Enter stock" required min="0" step="1">
                             </div>
+                            <div class="form-group">
+                                <label for="video">Product Video</label>
+                                <input type="file" class="form-control" name="video" id="video" accept="video/*">
+                            </div>
                            
                         <div class="modal-footer">
-                            <button type="submit" id="crop" class="btn btn-primary">Crop and Add Item</button>
+                            <button type="submit" id="crop" class="btn btn-primary">  Add Item</button>
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
                     </form>
@@ -492,10 +506,14 @@
                                 <label>Stock</label>
                                 <input type="number" class="form-control" name="stock" value="{{ i.stock }}" placeholder="Enter stock quantity" min="0" step="1" required>
                             </div>
+                            <div class="form-group">
+                                <label for="video">Product Video</label>
+                                <input type="file" class="form-control" name="video" id="video" accept="video/*">
+                            </div>
                             
                         </div>
                         <div class="modal-footer">
-                            <button type="submit" id="cropAndEdit" class="btn btn-primary">Crop and Edit Product</button>
+                            <button type="submit" id="cropAndEdit" class="btn btn-primary">  Edit Product</button>
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
                     </form>

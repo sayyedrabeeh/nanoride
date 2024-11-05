@@ -16,8 +16,23 @@ from authentication.models import ProductQuestion
 from django.views.decorators.cache import never_cache
 from django.contrib import messages
 from django.db.models import Sum
+from authentication.models import OrderItem
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+
+
+STATUS_TRANSITIONS = {
+    "Order Pending": ["Order Pending", "Order Confirmed", "Cancelled"],
+    "Order Confirmed": ["Order Confirmed", "Shipped", "Cancelled"],
+    "Shipped": ["Shipped", "Out For Delivery", "Cancelled"],
+    "Out For Delivery": ["Out For Delivery", "Delivered", "Requested Return"],
+    "Delivered": ["Delivered", "Requested Return"],
+    "Cancelled": ["Cancelled"],
+    "Requested Return": ["Requested Return", "Approve Returned", "Reject Returned"],
+    "Approve Returned": ["Approve Returned"],
+    "Reject Returned": ["Reject Returned"],
+}
+
 
 
 User = get_user_model()
@@ -222,6 +237,8 @@ def add_products(request):
         brand_id = request.POST.get('brand')
        
         stock = request.POST.get('stock')
+        video = request.FILES.get('video')  # Get the uploaded video file
+
 
         # Get category and brand objects
         category = get_object_or_404(Categories, id=category_id)
@@ -233,7 +250,8 @@ def add_products(request):
             description=description,
             category=category,
             brand=brand,
-          
+            video=video,  # Assign the video to the product
+
             stock=stock,
         )
         new_item.save()
@@ -277,7 +295,11 @@ def edit_products(request, product_id):
             product.brand = brand
          # Update the price
             product.stock = stock  # Update the stock
-            
+            # Update the product's video field
+
+            video = request.FILES.get('video')  # Get the uploaded video file
+            if video:
+               product.video = video 
             # Handle multiple image uploads
             if request.FILES.getlist('edited_images[]'):
                 for img in request.FILES.getlist('edited_images[]'):
@@ -620,6 +642,8 @@ def list_catogery(request):
 
 def varients(request, product_id):
     product = get_object_or_404(Product, id=product_id)
+    variants = Variants.objects.filter(product=product)
+    print('varient:',variants)
 
     if request.method == 'POST':
         try:
@@ -646,8 +670,8 @@ def varients(request, product_id):
                 size=size,
                 type1=type1,
                 stock=stock,
-                price=price
-            )
+                price=price,
+             )
 
             # Save each of the images associated with the variant
             for i in range(1, 5):  # Assuming you want to support 4 images
@@ -660,7 +684,6 @@ def varients(request, product_id):
         except Exception as e:
             return HttpResponseBadRequest(f"An error occurred: {str(e)}")
 
-    variants = Variants.objects.filter(product=product)
     context = {
         'product': product,
         'variants': variants
@@ -691,11 +714,15 @@ def product_variants_view(request, product_id):
     print('iiii',variants)
     for variant in variants:
         print('Variant ID:', variant.id)
+    order_items = OrderItem.objects.prefetch_related(
+        Prefetch('variants', queryset=Variants.objects.prefetch_related('images'))
+    ).filter(order_id=order_id)
     # variants = product.variants.all()
     
     context = {
         'product': product,
         'variants': variants,
+        'order_items': order_items,
     }
     
     return render(request, 'adminside/varients.html', context)
@@ -725,6 +752,7 @@ def add_variant_view(request, product_id):
             type1=type1,
             stock=stock,
             price=price,
+ 
         )
 
         # Handle the uploaded images
@@ -742,7 +770,7 @@ def add_variant_view(request, product_id):
 @login_required(login_url='admin_login')
 def edit_variant(request, product_id, variant_id):
     product = get_object_or_404(Product, id=product_id)
-    variant = get_object_or_404(Variant, id=variant_id)
+    variant = get_object_or_404(Variants, id=variant_id)
 
     if request.method == 'POST':
         # Update the variant with the new data
@@ -752,6 +780,8 @@ def edit_variant(request, product_id, variant_id):
         variant.stock = int(request.POST.get('stock'))
         variant.price = float(request.POST.get('price'))
 
+
+    
         variant.save()  # Save the variant first
 
         # Handle image uploads if provided
@@ -868,3 +898,57 @@ def submit_question(request):
             error_message = f"{' and '.join(missing_fields).capitalize()} cannot be empty."
             return JsonResponse({'error': error_message}, status=400)
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+
+
+   # Adjust import according to your structure
+
+@csrf_exempt
+def update_order_item_status(request):
+    order_items = OrderItem.objects.all()
+
+    for item in order_items:
+        current_status = item.status
+        
+        # Determine allowed statuses based on the current status
+        if current_status == "Order Pending":
+            item.allowed_statuses = ["Order Confirmed", "Cancelled"]
+        elif current_status == "Order Confirmed":
+            item.allowed_statuses = ["Shipped", "Cancelled"]
+        elif current_status == "Shipped":
+            item.allowed_statuses = ["Out For Delivery", "Cancelled"]
+        elif current_status == "Out For Delivery":
+            item.allowed_statuses = ["Delivered", "Cancelled"]
+        elif current_status == "Delivered":
+            item.allowed_statuses = ["Requested Return"]
+        elif current_status == "Cancelled":
+            item.allowed_statuses = []  # No further actions allowed
+        elif current_status == "Requested Return":
+            item.allowed_statuses = ["Approve Returned", "Reject Returned"]
+        elif current_status == "Approve Returned":
+            item.allowed_statuses = []  # No further actions allowed
+        elif current_status == "Reject Returned":
+            item.allowed_statuses = []  # No further actions allowed
+        else:
+            item.allowed_statuses = []  # Default case
+
+    return render(request, 'adminside/order.html', {
+        'order_items': order_items,
+    })
+
+def update_status(request, orderitem_id):
+    # Get the OrderItem object by its ID
+    order_item = get_object_or_404(OrderItem, orderitem_id=orderitem_id)
+    status = request.POST.get('status')  # Retrieve the status from the POST request
+
+    # Update the status if it's a valid choice
+    valid_statuses = [choice[0] for choice in OrderItem.STATUS_CHOICES]
+    if status in valid_statuses:
+        order_item.status = status
+        order_item.save()
+        messages.success(request, f"Order status updated to '{status}'.")
+    else:
+        messages.error(request, "Invalid status selected.")
+
+    # Redirect back to the main order management page
+    return redirect('update_order_item_status')

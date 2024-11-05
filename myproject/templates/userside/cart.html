@@ -21,7 +21,7 @@
         body {
             background-color: #000;
             color: #e0f7e8;
-            font-family: 'Creepster', cursive;
+            {% comment %} font-family: 'Creepster', cursive; {% endcomment %}
         }
 
         /* Cart Container */
@@ -256,10 +256,27 @@
                     </div>
                 {% endfor %}
                 
-                <div class="cart-total">
+                {% comment %} <div class="cart-total">
                     <p>Grand Total: ${{ cart_total }}</p>
                     <button class="button">Proceed to Checkout</button>
+                </div> {% endcomment %}
+
+
+                <div class="cart-total">
+                    <p>Grand Total: ${{ cart_total }}</p>
+                    <form action="{% url 'checkout' %}" method="GET">
+                        {% for item in cart_items %}
+                        <input type="hidden" name="cart_item_id" value="{{ item.id }}">
+                        <p>kkk{{ item.id }}</p>
+                       <input type="hidden" name="quantity" value="{{ item.quantity }}">
+                        <p>hhh{{ item.quantity }}</p>
+                        {% endfor %} 
+                        <button type="submit" class="button">Proceed to Checkout</button>
+                    </form>
                 </div>
+
+
+
             {% else %}
                 <p>Your cart is empty.</p>
                 <img src="{% static 'images/empty.gif' %}" alt="Empty Cart" class="centered-gif" style='margin-left: 110px;'/>

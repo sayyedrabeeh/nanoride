@@ -9,7 +9,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Halloween Shop</title>
-    
+    <!--introjs--> 
+    <link rel="stylesheet" href="{% static 'intro.js/minified/introjs.min.css' %}">
+
+     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+
     <!-- Bootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     
@@ -1214,23 +1219,66 @@ button:hover {
 .product-card:hover .secondary-image {
     opacity: 1;
 }
+
+
+/* Customize tooltip background color */
+.introjs-tooltip {
+    background-color: #2d3436; /* Dark gray */
+    color: #e0f7e8; /* Light green */
+}
+
+/* Customize tooltip text */
+.introjs-tooltiptext {
+    font-size: 16px;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Style the buttons */
+.introjs-button {
+    background-color: #1abc9c; /* Green */
+    color: #fff;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+/* Style the highlighted element */
+.introjs-helperLayer {
+    background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+}
+
+/* Customize progress bar color */
+.introjs-progress {
+    background-color: #1abc9c;
+}
+
+/* Remove border from tooltip */
+.introjs-tooltip {
+    border: none;
+}
+
+
+
  
     </style>
 </head>
 <body>
  
-    <section class="hero">
+    <section class="hero" data-step="1" data-intro="Welcome to NANORIDE. Start exploring our amazing collection!">
         <div class="hero-overlay">
             <h1>Welcome to NANORIDE</h1>
             <p>Your tagline or mission statement goes here.</p>
             <a href="#featured-products" class="cta-button">Shop Now</a>
+            <button id="startTourButton"style='margin-top:10px;' class="btn btn-sucess">Start Demo Tour</button>
+
         </div>
     </section>
+    
+
     
      
          
     <!-- Craft and Supplies Section -->
-    <section class="container py-5">
+    <section class="container py-5"  data-step="2" data-intro="Check out our craft and supplies section!">
         <h2 style='color: green'>Craft And Supplies</h2>
 		<div id="craftCarousel" class="carousel slide" data-bs-ride="carousel">
 			<div class="carousel-inner">
@@ -1278,7 +1326,7 @@ button:hover {
                 <!-- Additional carousel items as needed -->
            
     </section>
-    <div class="banner-section">
+    <div class="banner-section"  data-step="3" data-intro="Explore exclusive offers here!">
 		<img src="{% static 'images/p1.jpg' %}" alt="Banner Image 2"> 
         <div class="banner-content">
             <h2 class="banner-title"style='color: green'>Exclusive Offers Await!</h2>
@@ -1286,7 +1334,7 @@ button:hover {
         </div>
     </div>
 
-    <section class="features">
+    <section class="features"  data-step="4" data-intro="These are our core features, including fast delivery and secure payments.">
         <div class="feature">
             <i class="feature-icon fa fa-shipping-fast"></i>
             <h3 style='color:black'>Fast Delivery</h3>
@@ -1305,13 +1353,13 @@ button:hover {
     </section>
     
     <!-- New Arrivals Section -->
-    <section class="container py-5">
+    <section class="container py-5" data-step="5" data-intro="Discover our latest arrivals!">
         <h2 style='color: green'>New Arrivals</h2>
 		   
 		  
              <!-- Additional product cards as needed -->
 
-
+ 
 
  
              <div class="row g-3">
@@ -1478,7 +1526,23 @@ button:hover {
     </form>
 </section>
 
- 
+
+<script src="{% static 'intro.js/minified/intro.min.js' %}"></script>
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+<!-- Bootstrap JavaScript (required by Bootstrap Tour) -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+<!-- Bootstrap Tour JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tour/0.12.0/js/bootstrap-tour.min.js"></script>
+
+     <!--introjs--> 
+     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tour/0.11.0/css/bootstrap-tour.min.css" rel="stylesheet">
+
+<!-- Bootstrap JS Bundle with Popper -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 <script>
     // script.js
@@ -1489,12 +1553,28 @@ navbarToggle.addEventListener('click', () => {
     navbarMenu.classList.toggle('active');
 });
 
+document.getElementById('startTourButton').addEventListener('click', function() {
+    introJs().start();
+});
+ 
+.start();  
+const getDynamicPosition = (element) => {
+    // Example logic for determining position
+    if (window.innerWidth < 600) {
+        return 'top'; // For small screens, show at the top
+    }
+    return 'right'; // For larger screens, show on the right
+};
+
+ 
+
+ 
+
 </script>
 
 
 
-    <!-- Bootstrap JS Bundle with Popper -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
 </body>
 </html>
 {% endblock %}

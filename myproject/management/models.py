@@ -93,6 +93,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2,default=0)  # Adjust max_digits and decimal_places as needed
     stock = models.PositiveIntegerField(default=0) 
     main_image = models.ImageField(upload_to='product_images/main/', blank=True, null=True)
+    video = models.FileField(upload_to='variant_videos/', blank=True, null=True)
 
     # Foreign Key relationship
     brand = models.ForeignKey('Brand', on_delete=models.CASCADE, related_name='products')
@@ -118,6 +119,7 @@ class Variants(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status  =models.CharField(default='listed')
+
     # Many-to-many relationship with Product
     product = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE,default=24)
      # products = models.ManyToManyField('Product', related_name='variants')
@@ -131,6 +133,10 @@ class VariantImage(models.Model):
 
     def __str__(self):
         return f'Image for Variant: {self.variant.type1} in {self.variant.colour}'
+    
+    
+    
+    
 class ProductVideo(models.Model):
     product = models.ForeignKey(Product, related_name='videos', on_delete=models.CASCADE)
     video = models.FileField(upload_to='product_videos/',blank=True, null=True)
@@ -138,6 +144,11 @@ class ProductVideo(models.Model):
     
     def __str__(self):
         return f'Video for {self.product.name}'
+    
+    
+    
+    
+    
 class Review(models.Model):
     product = models.ForeignKey('Product', related_name='reviews', on_delete=models.CASCADE)
     name = models.CharField(max_length=100)

@@ -1,5 +1,6 @@
 {% extends 'userside/base.html' %}
-
+ 
+ 
 {% block content %}
 {% load static %}
 <!DOCTYPE html>
@@ -11,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
  <style>
-    /* Global Styling */
+    {% comment %} /* Global Styling */
 * {
     margin: 0;
     padding: 0;
@@ -21,8 +22,7 @@
 body {
     background-color: #000;
     color: #e0f7e8;
-    {% comment %} font-family: 'Creepster', cursive; {% endcomment %}
-    margin-bottom: 20px;
+     margin-bottom: 20px;
 }
 
 /* Navbar */
@@ -171,8 +171,269 @@ footer {
         display: flex;
     }
 }
+ h1,h2,h3,h4,h5,h6{
+			        
+			color: #e0f7e8; /* Light green color */
+			font-family: 'Creepster', cursive; /* or your desired font */
+			margin-bottom: 20px; /* Adjust as needed */
+   }
+   .bold-hr {
+    border: none; /* Remove default border */
+    height: 4px; /* Adjust thickness here */
+    background-color: #28a745; /* Change to your desired color */
+    margin: 20px 0; /* Adjust spacing as needed */
+}
+.btn-checkout {
+    background-color: #28a745; /* Green background */
+    color: #fff; /* White text */
+    padding: 12px 20px; /* Padding around the text */
+    border: none; /* No border */
+    border-radius: 5px; /* Slightly rounded corners */
+    font-size: 16px; /* Larger font size for better readability */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+}
+
+.btn-checkout:hover {
+    background-color: #218838; /* Darker green on hover */
+    color: #fff; /* Keep text white on hover */
+}
+
+.btn-checkout:focus {
+    outline: none; /* Remove default focus outline */
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.5); /* Optional: Add a subtle shadow effect */
+}
+ {% endcomment %}
+ 
+
+
+
+
+ /* Global Styling */
+ * {
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
+ }
+
+ body {
+     background-color: #000;
+     color: #e0f7e8;
+     margin-bottom: 20px;
+ }
+
+ /* Navbar */
+ .navbar {
+     background-color: #1b1b1b;
+     color: #e0f7e8;
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     padding: 10px 20px;
+     position: sticky;
+     top: 0;
+     z-index: 1000;
+ }
+
+ .navbar-logo .sidebar-title {
+     color: #e0f7e8;
+     font-size: 35px;
+     font-weight: 900;
+ }
+
+ /* Container */
+ .container {
+     max-width: 800px;
+     margin: 20px auto;
+     padding: 20px;
+     background-color: #1b1b1b;
+     border-radius: 10px;
+ }
+
+ /* Section */
+ .section {
+     margin-bottom: 20px;
+ }
+
+ /* Address and Payment Options */
+ .address-option, .payment-option {
+     display: flex;
+     align-items: center;
+     margin: 10px 0;
+ }
+
+ .address-option input, .payment-option input {
+     margin-right: 10px;
+ }
+
+ .btn-add-address {
+     background-color: #28a745;
+     border: none;
+     color: #fff;
+     padding: 8px 12px;
+     margin-top: 10px;
+     cursor: pointer;
+ }
+
+ .btn-add-address:hover {
+     background-color: #218838;
+ }
+
+ /* Summary */
+ .summary-item, .summary-total {
+     display: flex;
+     justify-content: space-between;
+     margin-bottom: 10px;
+ }
+
+ .summary-total {
+     font-weight: bold;
+ }
+
+ /* Button */
+ .btn {
+     display: inline-block;
+     background-color: #28a745;
+     color: #fff;
+     padding: 10px 15px;
+     border: none;
+     cursor: pointer;
+     font-size: 1em;
+ }
+
+ .btn-checkout {
+     width: 100%;
+     margin-top: 15px;
+ }
+
+ /* Progress Bar */
+ .progress-bar {
+     height: 4px;
+     background-color: #28a745;
+     position: relative;
+     bottom: 0;
+     left: 0;
+     width: 100%;
+     transition: width 3s linear;
+ }
+
+ /* Footer */
+ footer {
+     background-color: #1b1b1b;
+     color: #e0f7e8;
+     padding: 20px;
+     margin-top: 20px;
+ }
+
+ .footer-content {
+     display: flex;
+     justify-content: space-between;
+     flex-wrap: wrap;
+ }
+
+ .footer-section {
+     flex: 1;
+     margin: 10px;
+ }
+
+ .footer-section h4 {
+     margin-bottom: 10px;
+     font-size: 18px;
+     font-weight: bold;
+     color: #e0f7e8;
+ }
+
+ .footer-section ul {
+     list-style-type: none;
+ }
+
+ .footer-section ul li {
+     margin-bottom: 8px;
+ }
+
+ .footer-section a {
+     color: #e0f7e8;
+     text-decoration: none;
+ }
+
+ .footer-section a:hover {
+     text-decoration: underline;
+ }
+
+ .social-icons a {
+     color: #e0f7e8;
+     font-size: 20px;
+     margin-right: 10px;
+ }
+
+ .social-icons a:hover {
+     color: wheat;
+ }
+
+ /* Responsive */
+ @media (max-width: 768px) {
+     .navbar-menu {
+         display: none;
+         flex-direction: column;
+     }
+
+     .navbar-menu.show {
+         display: flex;
+     }
+
+     .navbar-toggle {
+         display: flex;
+     }
+ }
+
+ h1, h2, h3, h4, h5, h6 {
+     color: #e0f7e8;
+     font-family: 'Creepster', cursive;
+     margin-bottom: 20px;
+ }
+
+ .bold-hr {
+     border: none;
+     height: 4px;
+     background-color: #28a745;
+     margin: 20px 0;
+ }
+
+ .btn-checkout {
+     background-color: #28a745;
+     color: #fff;
+     padding: 12px 20px;
+     border: none;
+     border-radius: 5px;
+     font-size: 16px;
+     cursor: pointer;
+     transition: background-color 0.3s ease;
+ }
+
+ .btn-checkout:hover {
+     background-color: #218838;
+     color: #fff;
+ }
+
+ .btn-checkout:focus {
+     outline: none;
+     box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.5);
+ }
+
+
 
  </style><!-- Assuming the CSS is saved in styles.css -->
+
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- jQuery (required for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+
+
 </head>
 <body>
 
@@ -182,65 +443,397 @@ footer {
     <div class="progress-bar"></div>
 
     <!-- Checkout Form -->
-    <div class="container">
+    <div class="container" style='    background-color: #636363;'>
         <h1>Checkout</h1>
+ 
 
-        <!-- Address Selection Section -->
         <div class="section">
             <h2>Select Delivery Address</h2>
             <div class="address-container">
-                <label class="address-option">
-                    <input type="radio" name="address" checked>
-                    <span>123 Street, City, Country - 123456</span>
-                </label>
-                <label class="address-option">
-                    <input type="radio" name="address">
-                    <span>456 Avenue, City, Country - 654321</span>
-                </label>
-                <button class="btn btn-add-address">+ Add New Address</button>
+                {% for address in user_addresses %}
+                    <label class="address-option">
+                        <input type="radio" name="address" value="{{ address.id }}" {% if address.is_default %}checked{% endif %}>
+                        <span>{{ address.address_line1 }}{% if address.address_line2 %}, {{ address.address_line2 }}{% endif %}, {{ address.city }}, {{ address.state }}, {{ address.country }} - {{ address.postal_code }}</span>
+                    </label>
+                    
+                {% empty %}
+                    <p>No addresses found. Please add a new address.</p>
+                {% endfor %}
+                 <button class="btn btn-add-address" data-toggle="modal" data-target="#addAddressModal" style='background-color:#559555;'>+ Add New Address</button>
             </div>
         </div>
-
+        
+        <!-- Add Address Modal -->
+        <div class="modal fade" id="addAddressModal" tabindex="-1" role="dialog" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addAddressModalLabel"style='color:green;'>Add New Address</h5>
+                     
+                    </div>
+                    <div class="modal-body">
+                        <form id="addressForm">
+                            <div class="form-group">
+                                <label for="postalCode">Postal Code</label><br>
+                                <input type="text" class="form-control" id="postalCode" name="postal_code" required>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="findAddress" style='margin-top:10px;'>Find Address</button>
+                        </form>
+                        <div id="addressResult" style="margin-top: 20px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Payment Method Section -->
+        <div class="modal fade" id="saveAddressModal" tabindex="-1" role="dialog" aria-labelledby="saveAddressModal" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="saveAddressModal" style='color:green;'>Save Address</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addressForm" method='POST' action="{% url 'save_address'%}">
+                            {% csrf_token %}
+                             
+                            <div class="form-group">
+                                <label for="address_line2">Address Line </label>
+                                <input type="text" class="form-control" id="address_line1" name="address_line1">
+                            </div>
+                            <div class="form-group">
+                                <label for="city">City</label>
+                                <input type="text" class="form-control" id="city" name="city" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="state">State</label>
+                                <input type="text" class="form-control" id="state" name="state" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="postal_code">Postal Code</label>
+                                <input type="text" class="form-control" id="postal_code" name="postal_code" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="country">Country</label>
+                                <input type="text" class="form-control" id="country" name="country" required>
+                            </div>
+                              
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="submitAddress">Save Address</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+        <form method="POST" action="{% url 'place_order' %}">
+            {% csrf_token %}
+        <hr class="bold-hr">
         <div class="section">
             <h2>Choose Payment Method</h2>
             <div class="payment-methods">
                 <label class="payment-option">
-                    <input type="radio" name="payment" checked>
+                    <input type="radio" name="payment" value="Credit Card" checked>
                     <span><i class="fas fa-credit-card"></i> Credit Card</span>
                 </label>
                 <label class="payment-option">
-                    <input type="radio" name="payment">
+                    <input type="radio" name="payment" value="Bank Transfer">
                     <span><i class="fas fa-university"></i> Bank Transfer</span>
                 </label>
                 <label class="payment-option">
-                    <input type="radio" name="payment">
+                    <input type="radio" name="payment" value="Wallet">
                     <span><i class="fas fa-wallet"></i> Wallet</span>
+                </label>
+                <label class="payment-option">
+                    <input type="radio" name="payment" value="Cash on Delivery">
+                    <span><i class="fas fa-money-bill-wave"></i> Cash on Delivery</span>
                 </label>
             </div>
         </div>
+        
+        
+        <hr class="bold-hr">
+        <div class="checkout-container">
+            
+        
+            {% comment %} <form method="POST" action="{% url 'place_order' %}">
+                {% csrf_token %}
+                <h3>Order Summary</h3>
+                
+                <div class="order-summary" style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+                     
 
-        <!-- Summary Section -->
-        <div class="section">
-            <h2>Order Summary</h2>
-            <div class="summary-item">
-                <span>Product 1</span>
-                <span>$10.00</span>
-            </div>
-            <div class="summary-item">
-                <span>Product 2</span>
-                <span>$20.00</span>
-            </div>
-            <div class="summary-total">
-                <strong>Total:</strong>
-                <span>$30.00</span>
-            </div>
-            <button class="btn btn-checkout">Place Order</button>
-        </div>
+                    {% if item_details %}
+                    {% for detail in item_details %}
+                        <div class="summary-item" style="display: flex; flex-direction: row; align-items: center; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                            <!-- Product Image -->
+                            {% if detail.image %}
+                                <img src="{{ detail.image }}" alt="{{ detail.name }}" style="width: 80px; height: 80px; object-fit: cover; margin-right: 20px;">
+                            {% else %}
+                                <p>No image available</p>
+                            {% endif %}
+                            <span>{{ detail.name }} ({{ detail.quantity }})</span>
+                            <span>Color: {{ detail.color }}</span>
+                            <span>Size: {{ detail.size }}</span>
+                            <span>Type: {{ detail.type }}</span>
+                            <span>${{ detail.price_per_unit }} each</span>
+                            <span>Total: ${{ detail.total_price }}</span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No items in your order summary.</p>
+                {% endif %}
+                
+
+
+                </div>
+                
+                <div class="summary-total" style="text-align: center; margin-top: 20px; font-size: 1.2em; font-weight: bold;">
+                    Total Amount: ${{ cart_total }}
+                </div>
+                
+                <button type="submit" class="btn btn-checkout" style="display: block; margin: 20px auto;">Place Order</button>
+            </form> {% endcomment %}
+
+  
+                <h3>Order Summary</h3>
+                
+                <div class="order-summary" style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+                    {% if item_details %}
+                        {% for detail in item_details %}
+                            <div class="summary-item" style="display: flex; flex-direction: row; align-items: center; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                                <!-- Product Image -->
+                                {% if detail.image %}
+                                    <img src="{{ detail.image }}" alt="{{ detail.name }}" style="width: 80px; height: 80px; object-fit: cover; margin-right: 20px;">
+                                {% else %}
+                                    <p>No image available</p>
+                                {% endif %}
+                                
+                                <!-- Product Details -->
+                                <div style="flex: 1;">
+                                    <div style="margin-bottom: 5px;">
+                                        <span style="font-weight: bold;">{{ detail.name }}</span> 
+                                        <span style="font-size: 0.9em; color: #000;">(Quantity: {{ detail.quantity }})</span>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; font-size: 0.9em; color: black;">
+                                        <div><strong>Color:</strong> {{ detail.color }}</div>
+                                        <div><strong>Size:</strong> {{ detail.size }}</div>
+                                        <div><strong>Type:</strong> {{ detail.type }}</div>
+                                    </div>
+                                </div>
+
+  
+                                
+                                <!-- Pricing Details -->
+                                <div style="text-align: right;">
+                                    <div style="font-weight: bold; margin-bottom: 5px;">${{ detail.price_per_unit }} each</div>
+                                    <div>Total: <strong>${{ detail.total_price }}</strong></div>
+                                    <input type="hidden" name="total_price" value="{{ detail.total_price }}">
+                                </div>
+            
+                                <!-- Hidden Inputs for OrderItem -->
+                                <input type="hidden" name="item_id" value="{{ detail.id }}">
+                                <input type="hidden" name="item_name" value="{{ detail.name }}">
+                                <input type="hidden" name="item_quantity" value="{{ detail.quantity }}">
+                                <input type="hidden" name="item_color" value="{{ detail.color }}">
+                                <input type="hidden" name="item_size" value="{{ detail.size }}">
+                                <input type="hidden" name="item_type" value="{{ detail.type }}">
+                                <input type="hidden" name="item_price" value="{{ detail.price_per_unit }}">
+                                <input type="hidden" name="item_total" value="{{ detail.total_price }}">
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No items in your order summary.</p>
+                    {% endif %}
+                </div>
+                <select name="address" id="address-select">
+                    <option value="" disabled selected>Select your address</option>
+                    {% for address in user_addresses %}
+                        <option value="{{ address.id }}" {% if address.is_default %}selected{% endif %}>
+                            {{ address.address_line1 }}{% if address.address_line2 %}, {{ address.address_line2 }}{% endif %}, {{ address.city }}, {{ address.state }}, {{ address.country }} - {{ address.postal_code }}
+                        </option>
+                    {% empty %}
+                        <option value="" disabled>No addresses found. Please add a new address.</option>
+                    {% endfor %}
+                </select>
+                 
+                <button type="submit" class="btn btn-checkout" style="display: block; margin: 20px auto;">Place Order</button>
+            </form>
+
+        <form method="GET" action="{% url 'userproducts' %}?warning_message=true" style="text-align: center; margin: 20px;">
+    <button type="submit" class="btn btn-cancel">Cancel Checkout</button>
+</form
+        
+
+
+
+
     </div>
 
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <!-- Footer -->
+<script>
+     
+ 
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+
+ 
+
+
+
+    $('#findAddress').on('click', function() {
+        var postalCode = $('#postalCode').val();
+        if (postalCode.length >= 5) {
+            $.ajax({
+                url: "{% url 'get_address_by_postal_code' %}",
+                type: "GET",
+                data: { postal_code: postalCode },
+                success: function(data) {
+                    $('#addressResult').html(`
+                        <h6 style='color: green;'>Address Found:</h6>
+                        <p>${data.address_line1}, ${data.address_line2 || ''}, ${data.city}, ${data.state}, ${data.country} - ${postalCode}</p>
+                        <button class="btn btn-success" id="saveAddress">Save Address</button>
+                    `);
+                    
+                    // Set address data for later use
+                    $('#saveAddress').data('address', {
+                        address_line1: data.address_line1,
+                        address_line2: data.address_line2, // Ensure address_line2 is included
+                        city: data.city,
+                        state: data.state,
+                        country: data.country,
+                        postal_code: postalCode
+                    });
+    
+                    // Add click event for saving the address
+                    $('#saveAddress').off('click').on('click', function() {
+                        var addressData = $(this).data('address');
+    
+                        // Log the data being sent to the server
+                        console.log('Sending data to save address:', addressData);
+    
+                        // AJAX request to save the address
+                        $.ajax({
+                            url: "{% url 'save_address' %}",
+                            type: "POST",
+                            data: {
+                                address_line1: addressData.address_line1,
+                                address_line2: addressData.address_line2, // Include address_line2
+                                city: addressData.city,
+                                state: addressData.state,
+                                country: addressData.country,
+                                postal_code: addressData.postal_code,
+                            },
+                            headers: {
+                                "X-CSRFToken": getCookie('csrftoken')
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    alert(response.success);
+                                    $('#saveAddressModal').modal('hide');  // Hide modal after success
+                                } else {
+                                    alert(response.error);
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Error saving address:', xhr.responseText); // Log full response for debugging
+                                alert('Error saving address. Please try again.');
+                            }
+                        });
+                    });
+                },
+                error: function() {
+                    $('#addressResult').html('<p class="text-danger">Address not found. Please check the postal code.</p>');
+                }
+            });
+        } else {
+            alert("Please enter a valid postal code.");
+        }
+    });
+    
+
+
+
+    if (!$('#saveAddress').data('is-bound')) {
+        $(document).off('focusin.modal');
+        $(document).on('click', '#saveAddress', function() {
+            var addressData = $(this).data('address');
+            $('#address_line1').val(addressData.address_line1);
+                                address_line2: data.address_line2, // Ensure address_line2 is included
+
+             $('#city').val(addressData.city);
+            $('#state').val(addressData.state);
+            $('#postal_code').val(addressData.postal_code);
+            $('#country').val(addressData.country);
+            $('#saveAddressModal').modal('show');
+        });
+        $('#saveAddress').data('is-bound', true);
+    }
+    if (!$('#submitAddress').data('is-bound')) {
+        $('#submitAddress').on('click', function() {
+
+            console.log('Sending data to save address:', {
+                address_line1: addressData.address_line1,
+                city: addressData.city,
+                state: addressData.state,
+                country: addressData.country,
+                postal_code: addressData.postal_code,
+            });
+            var formData = $('#addressForm').serialize();
+            $.ajax({
+                url: "{% url 'save_address' %}",
+                type: "POST",
+                data: formData,
+                headers: {
+                    "X-CSRFToken": getCookie('csrftoken')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.success);
+                        $('#saveAddressModal').modal('hide');  // Hide modal after success
+                    } else {
+                        alert(response.error);
+                    }
+                },
+                error: function() {
+                    alert('Error saving address. Please try again.');
+                }
+            });
+        });
+        $('#submitAddress').data('is-bound', true);  // Mark as bound to prevent rebinding
+    }
+
+</script>
     
 </body>
 </html>
-{% endblock %}
+{% endblock %}  
+
+
+  
+
+
+ 
+
+ 

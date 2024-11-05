@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Successful</title>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000; /* Black background */
+            color: #e0f7e8; /* Light green color */
+            font-family: 'Creepster', cursive; /* Custom font */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            margin: 0;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: #1b1b1b; /* Dark background */
+            color: #e0f7e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+        }
+
+        .navbar-logo .sidebar-title {
+            color: #e0f7e8; /* Light green color */
+            font-size: 35px;
+            font-weight: 900;
+        }
+
+        .navbar-menu {
+            display: flex;
+            list-style-type: none;
+        }
+
+        .navbar-menu li {
+            margin: 0 15px;
+        }
+
+        .navbar-menu a {
+            color: #e0f7e8;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* Success Message */
+        .success-message {
+            margin: 20px;
+            padding: 40px; /* Increased padding */
+            background-color: #1b1b1b; /* Dark background */
+            border-radius: 8px;
+            width: 400px; /* Increased width */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Optional shadow for depth */
+        }
+
+        .success-message h1 {
+            margin-bottom: 15px;
+            font-size: 24px;
+            color: #28a745; /* Green color for success */
+        }
+
+        /* Tick Mark Styles */
+        .tick-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .tick-circle {
+            width: 100px; /* Circle size */
+            height: 100px; /* Circle size */
+            border: 5px solid #28a745; /* Green border */
+            border-radius: 50%; /* Make it circular */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #1b1b1b; /* Dark background */
+        }
+
+        .tick-icon {
+            font-size: 48px; /* Font Awesome icon size */
+            color: #28a745; /* Green color for tick icon */
+        }
+
+        /* Button styles */
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .button {
+            background-color: #28a745; /* Green background */
+            color: #e0f7e8; /* Light green text */
+            padding: 10px 20px; /* Adjusted padding */
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            flex: 1; /* Allow buttons to take equal space */
+            margin: 0 5px; /* Margin between buttons */
+        }
+
+        .button:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        /* Footer */
+        footer {
+            background-color: #1b1b1b;
+            color: #e0f7e8;
+            padding: 20px;
+            margin-top: 20px;
+            width: 100%;
+            position: absolute;
+            bottom: 0;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-menu {
+                display: none;
+                flex-direction: column;
+            }
+
+            .success-message {
+                width: 90%; /* Full width on small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    
+
+    <div class="success-message">
+        <h1>Order Successful!</h1>
+        <p>Your order has been placed successfully. Thank you for shopping with us!</p>
+
+        <!-- Tick Mark inside Circle -->
+        <div class="tick-container">
+            <div class="tick-circle">
+                <i class="fas fa-check tick-icon"></i> <!-- Font Awesome Check Icon -->
+            </div>
+        </div>
+
+        <div class="button-container">
+            <a href="{% url 'order_detail' %} " class="button">View Order</a>
+            <a href="{% url 'userproducts' %}" class="button">Continue Shopping</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Your Store. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Optional JavaScript for any interactive elements
+    </script>
+</body>
+</html>

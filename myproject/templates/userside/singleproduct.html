@@ -933,7 +933,7 @@ footer {
 
 
 <div class="product-container">
-    <div class="image-gallery">
+    {% comment %} <div class="image-gallery">
 		<div class="main-image-container">
 			<img id="main-image" src="{{ default_variant.images.0.image }}" alt="{{ product.name }}" class="main-image" data-zoom-image="{{ default_variant.images.0.image }}">
 		</div>
@@ -942,8 +942,48 @@ footer {
 				<img src="{{ image.image }}" alt="Thumbnail" class="thumbnail" onclick="updateMainImage('{{ image.image }}')">
 			{% endfor %}
 		</div>
-	</div>
-	
+	</div> {% endcomment %}
+
+    <div class="image-gallery">
+        <!-- Main Image Container -->
+        <div class="main-image-container">
+            <img id="main-image" src="{{ default_variant.images.0.image }}" alt="{{ product.name }}" class="main-image" data-zoom-image="{{ default_variant.images.0.image }}">
+        </div>
+    
+        <!-- Thumbnails -->
+        <div class="thumbnail-images" id="thumbnail-images">
+            {% for image in default_variant.images %}
+                <img src="{{ image.image }}" alt="Thumbnail" class="thumbnail" onclick="updateMainImage('{{ image.image }}')">
+            {% endfor %}
+        </div>
+    
+        <!-- Video Section (Displayed if videos are available) -->
+        {% comment %} {% if variants %}
+       <div class="video-gallery">
+        <h2>Product Variant Videos</h2>
+        {% for variant in variants %}
+            {% if variant.video %}
+                <div class="video-container">
+                    <video controls width="300">
+                        <source src="{{ variant.video.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <p>Variant - Color: {{ variant.colour }}, Size: {{ variant.size }}, Type: {{ variant.type1 }}</p>
+                </div>
+            {% endif %}
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endcomment %}
+
+    
+    {% if product.video %}
+    <video controls width="320">
+        <source src="{{ product.video.url }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+{% endif %}
+	 </div>
 
     <div class="product-details">
         <h1>{{ product.name }}</h1>
@@ -998,7 +1038,7 @@ footer {
                 </div> {% endcomment %}
                 
                 <div class="button-container">
-                    <div class="variant-item">
+                    <div class="variant-item" style='display:flex;'>
                         <form method="POST" action="{% url 'add_to_cart' %}">
                             {% csrf_token %}
 
@@ -1008,9 +1048,18 @@ footer {
 
                             <button type="submit" class="add-to-cart-button">Add to Cart</button>
                         </form>
+
+                        <form method="POST" action="{% url 'single_checkout' %}"> <!-- Replace 'checkout' with your actual checkout URL name -->
+                            {% csrf_token %}
+                            <!-- Hidden input for the selected variant ID for checkout -->
+                            <input type="hidden" name="variant_id" value="{{ default_variant.id }}">
+                            
+                            
+                            <button type="submit" class="shop-now-button" style='width:300px;'>Shop Now</button>
+                        </form>  
                     </div>
-                    <button type="button" class="shop-now-button">Shop Now</button>
-                </div>
+                                 
+                 </div>
  
 
 
@@ -1305,6 +1354,9 @@ function updateVariant() {
         stockElement.textContent = `In Stock: ${selectedVariant.stock}`; // Update stock
         selectedVariantIdInput.value = selectedVariant.id;
 
+
+
+        
         // Populate Thumbnail Images
         selectedVariant.images.forEach(imgObj => {
             const imgElement = document.createElement('img');
@@ -1316,6 +1368,9 @@ function updateVariant() {
             };
             thumbnailImagesContainer.appendChild(imgElement);
         });
+
+
+        
     } else {
         // If no matching variants, you can clear the displayed details or show a message
         mainImage.src = ''; // Clear the main image

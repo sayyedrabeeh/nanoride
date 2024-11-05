@@ -212,7 +212,7 @@
             </table>
         </div>
         
-        {% if question_to_answer %}
+         {% if question_to_answer %}
         <div class="modal show" style="display:block;" id="exampleModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -223,7 +223,7 @@
                         <button type="submit" class="close-btn" aria-label="Close">&times;</button>
                     </form>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" >
                     <form method="POST" action="{% url 'question' %}">
                         {% csrf_token %}
                         <input type="hidden" name="question_id" value="{{ question_to_answer.id }}">
@@ -244,7 +244,46 @@
                             <label for="answer">Your Answer</label>
                             <textarea class="form-control" name="answer" rows="3" placeholder="Enter your answer"></textarea>
                         </div>
-                        <div class="modal-footer">
+                        <div class="modal-footer"style=' position: absolute;bottom: 0px;right: 50px;'>
+                            <button type="submit" class="btn btn-primary" name="action" value="submit_answer">Submit</button>
+                            <button type="submit" class="btn btn-success" name="action" value="send_privately">Send Privately</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %} 
+
+{% comment %} 
+        {% if question_to_answer %}
+        <div class="modal show" style="display:block;" id="exampleModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Question</h5>
+                    <button type="button" class="close" aria-label="Close" onclick="document.getElementById('exampleModal').style.display='none'">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'question' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="question_id" value="{{ question_to_answer.id }}">
+                        <p>Please answer the following question:</p>
+                        <div class="form-group">
+                            <label for="username">User Email</label>
+                            <input type="text" class="form-control" value="{{ question_to_answer.email }}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="product_name">Product Name</label>
+                            <input type="text" class="form-control" value="{{ question_to_answer.product.name }}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="question">Your Question</label>
+                            <textarea class="form-control" rows="3" readonly>{{ question_to_answer.question }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="answer">Your Answer</label>
+                            <textarea class="form-control" name="answer" rows="3" placeholder="Enter your answer"></textarea>
+                        </div>
+                        <div class="modal-footer" style=' position: absolute;bottom: 80px;right: 50px;'>
                             <button type="submit" class="btn btn-primary" name="action" value="submit_answer">Submit</button>
                             <button type="submit" class="btn btn-success" name="action" value="send_privately">Send Privately</button>
                         </div>
@@ -253,6 +292,8 @@
             </div>
         </div>
         {% endif %}
+         {% endcomment %}
+
         
     </div>
 </body>

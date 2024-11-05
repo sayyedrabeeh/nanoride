@@ -51,6 +51,10 @@ urlpatterns = [
     path('question/',views.question,name='question'),
     # path('submit_question/', views.submit_question, name='submit_question'),
     path('submit_question/', views.submit_question, name='submit_question'),
+    path('update-status/', views.update_order_item_status, name='update_order_item_status'),
+    path('update-status/<int:orderitem_id>/', views.update_status, name='update_status'),
+
+
 
 
  
