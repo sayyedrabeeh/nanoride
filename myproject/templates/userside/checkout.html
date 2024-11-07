@@ -451,10 +451,12 @@ footer {
             <h2>Select Delivery Address</h2>
             <div class="address-container">
                 {% for address in user_addresses %}
-                    <label class="address-option">
-                        <input type="radio" name="address" value="{{ address.id }}" {% if address.is_default %}checked{% endif %}>
-                        <span>{{ address.address_line1 }}{% if address.address_line2 %}, {{ address.address_line2 }}{% endif %}, {{ address.city }}, {{ address.state }}, {{ address.country }} - {{ address.postal_code }}</span>
-                    </label>
+                <p>
+                    {{ address.address_line1 }}
+                    {% if address.address_line2 %}, {{ address.address_line2 }}{% endif %},
+                    {{ address.city }}, {{ address.state }}, {{ address.country }} - {{ address.postal_code }}
+                    {% if address.is_default %} <strong>(Default Address)</strong>{% endif %}
+                </p>
                     
                 {% empty %}
                     <p>No addresses found. Please add a new address.</p>

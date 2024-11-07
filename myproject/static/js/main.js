@@ -1,3 +1,4 @@
+import Cropper from 'cropperjs';
 
 (function ($) {
     "use strict";

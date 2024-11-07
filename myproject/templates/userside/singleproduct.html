@@ -918,6 +918,26 @@ footer {
 .cart-total {
     margin-top: 20px;
 }
+.video-container video {
+    width: 100%;
+}
+
+.video-container video::-webkit-media-controls {
+    display: none; /* For WebKit browsers */
+}
+
+.video-container video::-moz-media-controls {
+    display: none; /* For Firefox */
+}
+
+.video-container video {
+    pointer-events: none; /* Prevents controls from showing */
+}
+
+.video-container:hover video {
+    pointer-events: auto; /* Show controls when hovered */
+}
+
 
 </style>
 </head>
@@ -978,7 +998,7 @@ footer {
 
     
     {% if product.video %}
-    <video controls width="320">
+    <video controls width="320" style='margin-top:20px;width:85%;'>
         <source src="{{ product.video.url }}" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -1049,7 +1069,7 @@ footer {
                             <button type="submit" class="add-to-cart-button">Add to Cart</button>
                         </form>
 
-                        <form method="POST" action="{% url 'single_checkout' %}"> <!-- Replace 'checkout' with your actual checkout URL name -->
+                        <form method="POST" action="{% url 'checkout' %}"> <!-- Replace 'checkout' with your actual checkout URL name -->
                             {% csrf_token %}
                             <!-- Hidden input for the selected variant ID for checkout -->
                             <input type="hidden" name="variant_id" value="{{ default_variant.id }}">

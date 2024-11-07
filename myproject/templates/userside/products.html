@@ -171,7 +171,12 @@
                     <option value="">Default sorting</option>
                     <option value="price_low_to_high" {% if request.GET.sort == 'price_low_to_high' %}selected{% endif %}>Price: Low to High</option>
                     <option value="price_high_to_low" {% if request.GET.sort == 'price_high_to_low' %}selected{% endif %}>Price: High to Low</option>
-                </select>
+                    <option value="average_ratings" {% if request.GET.sort == 'average_ratings' %}selected{% endif %}>Average Ratings</option>
+                     
+                         <option value="new_arrivals" {% if request.GET.sort == 'new_arrivals' %}selected{% endif %}>New Arrivals</option>
+                        <option value="a_to_z" {% if request.GET.sort == 'a_to_z' %}selected{% endif %}>A - Z</option>
+                        <option value="z_to_a" {% if request.GET.sort == 'z_to_a' %}selected{% endif %}>Z - A</option>
+                    </select>
             </form>
 
             <!-- Product Grid -->
@@ -182,6 +187,8 @@
                             <!-- Display the first image from the first variant -->
                             {% if product.variants.all %}
                                 {% with product.variants.first as variant %}
+                                
+                                <a href="{% url 'singleproduct' product.id %}">
                                     {% if variant.images.all %}
                                         <img src="{{ variant.images.first.image.url }}" class="card-img-top" alt="{{ product.name }}">
                                     {% else %}
@@ -191,12 +198,18 @@
                             {% else %}
                                 <img src="default-image.jpg" class="card-img-top" alt="Default Image">
                             {% endif %}
+                                </a>
 
                             <div class="card-body">
                                 <h5 class="card-title text-success">{{ product.name }}</h5>
                                 <p class="card-text">${{ product.variants.first.price|default:product.price }}</p>
-                                <button class="btn btn-success w-100">Add to Cart</button>
-                            </div>
+                                <form method="POST" action="{% url 'add_to_cart' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}"> <!-- First variant ID -->
+                                    <p>ID: {{ product.variants.first.id }}</p>
+                                    <button type="submit" class="btn btn-success w-100">Add to Cart</button>
+                                </form>
+                                     </div>
                         </div>
                     </div>
                 {% endfor %}
@@ -232,6 +245,7 @@
                     <!-- Display the second image from the first variant -->
                     {% if product.variants.all %}
                         {% with product.variants.first as variant %}
+                        <a href="{% url 'singleproduct' product.id %}">
                             {% if variant.images.count > 1 %}
                                 <img src="{{ variant.images.all.1.image.url }}" class="card-img-top" alt="{{ product.name }}">
                             {% elif variant.images.count == 1 %}
@@ -239,6 +253,7 @@
                             {% else %}
                                 <img src="default-image.jpg" class="card-img-top" alt="Default Image">
                             {% endif %}
+                        </a>
                         {% endwith %}
                     {% else %}
                         <img src="default-image.jpg" class="card-img-top" alt="Default Image">
@@ -246,8 +261,12 @@
                     <div class="card-body">
                         <h5 class="card-title text-success">{{ product.name }}</h5>
                         <p class="card-text">${{ product.variants.first.price|default:product.price }}</p>
-                        <button class="btn btn-success w-100">Add to Cart</button>
-                    </div>
+                        <form method="POST" action="{% url 'add_to_cart' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}"> <!-- First variant ID -->
+                            <p>ID: {{ product.variants.first.id }}</p>
+                            <button type="submit" class="btn btn-success w-100">Add to Cart</button>
+                        </form>                    </div>
                 </div>
             </div>
         {% endfor %}

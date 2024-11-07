@@ -825,24 +825,33 @@
                         
         </div>  
     </div>        
-                                    <!-- Orders Content -->
-            <div id="orders" class="tab-content">
-                <h2 class="content-title">My Orders</h2>
-                <p>View and track your orders here.</p>
+    <div id="orders" class="tab-content">
+        <h2 class="content-title">My Orders</h2>
+        <p>View and track your orders here.</p>
+    
+        {% for order_item in order_items %}
+        <div class="order-card" style="width: 100%; border: 1px solid #ccc; padding: 15px; margin: 10px 0; background-color: #b1b1b1;">
+            <div style="display: flex; align-items: center;">
+                {% if order_item.variants.images.first %}
+                    <img src="{{ order_item.variants.images.first.image.url }}" alt="Product Image" style="width: 100px; height: auto; margin-right: 15px;">
+                {% else %}
+                    <img src="{% static 'images/default.jpg' %}" alt="No Image Available" style="width: 100px; height: auto; margin-right: 15px;"> <!-- Fallback image -->
+                {% endif %}
                 
-
-                <div class="order-card" style="width: 100%; border: 1px solid #ccc; padding: 15px; margin: 10px 0; background-color: #b1b1b1;">
-                    <div style="display: flex; align-items: center;">
-                        <img src="{% static 'images/p6.jpg' %}" alt="Product Image" style="width: 100px; height: auto; margin-right: 15px;">
-                        <div style="flex: 1;">
-                            <h5 class="product-name" style="color: black;">Product Name: BE1234</h5>
-                            <p class="product-price" style="color: green;">Price: $100000</p>
-                            <p class="order-status" style="color: orange;">Status: Arrived</p>
-                        </div>
-                        <button class="btn" style="background-color: green; color: white; padding: 10px 20px;">Track Order</button>
-                    </div>
+                <div style="flex: 1;">
+                    <h5 class="product-name" style="color: black;">Product Name: {{ order_item.variants.product.name }}</h5>
+                    <p class="product-price" style="color: green;">Price: ${{ order_item.price }}</p>
+                    <p class="order-status" style="color: orange;">Status: {{ order_item.status }}</p>
                 </div>
+                <button class="btn" style="background-color: green; color: white; padding: 10px 20px;">Track Order</button>
             </div>
+        </div>
+    {% empty %}
+        <p>No orders found.</p>
+    {% endfor %}
+    
+    </div>
+    
 
             <div id="wishlist" class="tab-content">
                 <h2 class="content-title">My Wishlist</h2>

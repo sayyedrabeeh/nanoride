@@ -138,7 +138,9 @@
                             <h4>{{ item.variants.name }}</h4>
                             <p>Quantity: {{ item.quantity }}</p>
                             <p>Price: ${{ item.price }}</p>
-                            <p>Status: {{ item.status }}</p> <!-- Display current status -->
+                            <p>Status: {{ item.status }}</p> 
+                            <!-- Display current status -->
+                            <p>Order Date: {{ item.created_at|date:"F j, Y, g:i a" }}</p> <!-- Display order date and time -->
                             <div class="order-actions">
                                 <button class="view-button">View Details</button>
         

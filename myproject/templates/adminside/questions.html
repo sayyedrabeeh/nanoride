@@ -143,7 +143,7 @@
 </head>
 <body>
     <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
+    <div class="sidebar" id="sidebar" style='overflow-y:auto;height: 100vh;scrollbar-width:none;'>
         <div class="sidebar-header">
             <span class="sidebar-title" style='color: wheat;font-size: 35px;font-weight: 900;'>NANORIDE</span>
         </div>
@@ -153,13 +153,15 @@
             <a href=" " id="dashboard"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
             <a href="{% url 'users' %} " id="customers"><i class="fas fa-users active"></i><span>Customers</span></a>
             <a href="{% url 'products' %}"><i class="fas fa-box"></i><span>Product</span></a>
-            <a href=" " id="orders"><i class="fas fa-shopping-cart"></i><span>Orders</span></a>
+            <a href="{% url 'update_order_item_status' %}  " id="orders"><i class="fas fa-shopping-cart"></i><span>Orders</span></a>
             <a href=" " id="offer"><i class="fas fa-tag"></i><span>Offer</span></a>
             <a href="{% url 'brand' %}" id="brand"class="active"><i class="fas fa-th"></i><span>Brand</span></a>
             <a href="{% url 'add_category_view' %}" id="category"><i class="fas fa-folder"></i><span>Category</span></a>
             <a href=" " id="report"><i class="fas fa-chart-line"></i><span>Report</span></a>
             <a href="{% url 'Edition' %}" id="edition"><i class="fas fa-book"></i><span>Edition</span></a>
             <a href="{% url 'type1' %}"><i class="fas fa-cogs"></i><span>Type</span></a>
+            <a href="{% url 'question' %}"><i class="fas fa-question-circle"></i><span class="link-text">Questions</span></a>
+
         </div>
     </div>
     

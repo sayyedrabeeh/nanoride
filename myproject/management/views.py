@@ -19,6 +19,7 @@ from django.db.models import Sum
 from authentication.models import OrderItem
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.db.models import Prefetch
 
 
 STATUS_TRANSITIONS = {
@@ -709,6 +710,8 @@ def index(request):
 @never_cache
 @login_required(login_url='admin_login')
 def product_variants_view(request, product_id):
+    order_id = request.session.get('order_id', None)  # Default to None if not found
+
     product = get_object_or_404(Product, id=product_id)
     variants = product.variants.filter(id__isnull=False)  
     print('iiii',variants)
@@ -798,7 +801,8 @@ def edit_variant(request, product_id, variant_id):
         'variant': variant,
     }
     return render(request, 'adminside/varients.html', context)
-
+@never_cache
+@login_required(login_url='admin_login')
 def toggle_listing(request, variant_id):
     variant = get_object_or_404(Variants, id=variant_id)
     
@@ -814,7 +818,8 @@ def toggle_listing(request, variant_id):
     return redirect('variants',product_id=product_id) 
 
 
-    
+@never_cache
+@login_required(login_url='admin_login')
 def question(request):
     print('hi')
     questions = ProductQuestion.objects.all().order_by('-status')
@@ -867,7 +872,8 @@ def send_answer_email(to_email, answer,question_text):
     send_mail(subject, plain_message, from_email, [to_email], html_message=html_message)
     
     
-
+@never_cache
+@login_required(login_url='admin_login')
 @csrf_exempt
 def submit_question(request):
     if request.method == 'POST':
@@ -902,7 +908,8 @@ def submit_question(request):
 
 
    # Adjust import according to your structure
-
+@never_cache
+@login_required(login_url='admin_login')
 @csrf_exempt
 def update_order_item_status(request):
     order_items = OrderItem.objects.all()
@@ -935,7 +942,8 @@ def update_order_item_status(request):
     return render(request, 'adminside/order.html', {
         'order_items': order_items,
     })
-
+@never_cache
+@login_required(login_url='admin_login')
 def update_status(request, orderitem_id):
     # Get the OrderItem object by its ID
     order_item = get_object_or_404(OrderItem, orderitem_id=orderitem_id)

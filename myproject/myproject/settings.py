@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-+b=h0@f!xtvfibg*2-6wj8mi@!h*e&wwofw^sz#lb-tp$gu&)v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -122,7 +122,7 @@ EMAIL_PORT = 587                                               # Port for TLS
 EMAIL_USE_TLS = True                                          # Use TLS
 EMAIL_HOST_USER = 'sayyedrabeeh240@gmail.com'                     # Your email address
 EMAIL_HOST_PASSWORD = 'wkbd oeoz ejoh zdva'   
-
+DEFAULT_FROM_EMAIL = 'sayyedrabeeh240@gmail.com'
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 

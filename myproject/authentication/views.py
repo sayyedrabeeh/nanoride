@@ -13,9 +13,15 @@ from django.contrib.auth import login
 from django.views.decorators.csrf import csrf_protect
 import random
 import logging
+from django.contrib.auth.views import PasswordResetConfirmView
+
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 import time
+from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 import uuid
 import requests
 from django.http import JsonResponse
@@ -38,15 +44,17 @@ from django.views.generic import TemplateView
 from django.contrib import messages
 from django.http import JsonResponse
 import json
-from .models import ProductQuestion,CustomUser,Address,Cart,CartItem,Order,OrderItem
+from .models import ProductQuestion,CustomUser,Address,Cart,CartItem,Order,OrderItem,Feedback,Product,Variants
 from authentication.models import CustomUser
 from django.contrib.auth.views import LoginView
-from management.models import Review 
+from management.models import Review,Product 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
 from django.contrib.auth import update_session_auth_hash
 from django.db.models import Sum,F
+from django.contrib.auth.views import PasswordResetView
+from django.urls import reverse_lazy
 # import geocoder
 
 def admin_login(request):
@@ -74,6 +82,8 @@ def generate_otp():
     return str(random.randint(100000, 999999))
 
 def usersignup(request):
+    user = CustomUser.objects.create(username='example', password='password')
+    
     if request.user.is_authenticated:
         return redirect('users')
     if request.method == 'POST':
@@ -290,10 +300,21 @@ def custom_logout(request):
     return redirect(reverse( 'login' )) 
 
 def home(request):
+    feedback_list = Feedback.objects.all().order_by('-created_at')[:5]
+    # products = Product.objects.prefetch_related('variants__images').all()
+    latest10=Product.objects.order_by('-created_at')[:10]
+    first10=Product.objects.order_by('created_at')[:10]
+    card=Product.objects.all()[:6]
     products=Product.objects.all()
     products = Product.objects.prefetch_related('variants__images').all()
     context={
-        'products':products
+        'products':products,
+        'feedback_list':feedback_list,
+        'latest10':latest10,
+        'first10':first10,
+        'card':card,
+        
+        # 'variants':variants
     }
     return render(request,'userside/home.html',context)
 
@@ -302,6 +323,16 @@ def userproducts(request):
     
     products = Product.objects.prefetch_related('variants__images').all()
     search_query = request.GET.get('search', '')
+    if search_query:
+        products = products.filter(name__icontains=search_query)
+
+    # Price filter
+    price = request.GET.get('price')
+    if price:
+        products = products.filter(variants__price__lte=price)
+
+    # Color filter
+    sort_option = request.GET.get('sort', '')
     if search_query:
         products = products.filter(name__icontains=search_query)
 
@@ -326,7 +357,20 @@ def userproducts(request):
         products = products.order_by('variants__price')
     elif sort == 'price_high_to_low':
         products = products.order_by('-variants__price')
-
+    if sort_option == 'price_low_to_high':
+        products = products.order_by('variants__price')
+    elif sort_option == 'price_high_to_low':
+        products = products.order_by('-variants__price')
+    if sort == 'average_ratings':
+        products = products.order_by('-ratings')
+    elif sort == 'featured':
+        products = products.filter(is_featured=True)
+    elif sort == 'new_arrivals':
+        products = products.order_by('-created_at')
+    elif sort == 'a_to_z':
+        products = products.order_by('name')
+    elif sort == 'z_to_a':
+        products = products.order_by('-name')
     context={
         'products':products
     }
@@ -335,6 +379,8 @@ def userproducts(request):
 
 
 @csrf_exempt 
+@login_required
+
 def submit_review(request, id):
     if request.method == 'POST':
         product = get_object_or_404(Product, id=id)
@@ -357,6 +403,8 @@ def submit_review(request, id):
 
 
 @login_required
+@login_required
+
 def singleproduct(request, id):
     # cart = get_object_or_404(Cart, user=request.user)
     # variant = get_object_or_404(Variants, product=product)  # Use this line only if you want the first variant
@@ -454,8 +502,6 @@ def singleproduct(request, id):
 
 
 
- 
-
 
 
 
@@ -505,12 +551,17 @@ def custom_logoutadmin(request):
 #     }
 #     return color_dict.get(color.lower(), (255, 255, 255))
 
+@login_required
+@never_cache
 
 def profile(request):
     user = request.user  # Get the logged-in user
     addresses = Address.objects.filter(user=user, status='listed')   
     default_address = addresses.filter(is_default=True).first()  # Get the default address
     print("Default Address:", default_address)  
+    order_items = OrderItem.objects.filter(order__user=request.user)  # Access the related Order using `order__user`
+    order_items = OrderItem.objects.select_related('variants__product').all()  # Adjust the filter as necessary
+    order_items = OrderItem.objects.select_related('variants__product').prefetch_related('variants__images').all()
 
     if request.method == 'POST':
         # Update user details
@@ -533,10 +584,13 @@ def profile(request):
     context = {
         'user': user,
         'addresses': addresses,
-        'default_address': default_address
+        'default_address': default_address,
+        'order_items': order_items
     }
     return render(request, 'userside/profile.html', context)
-# @never_cache
+@never_cache
+@login_required
+
 def profile_view(request):
     user = request.user  # Assuming the user is logged in
     default_address = Address.objects.filter(user=request.user, is_default=True).first()# Get default address
@@ -559,6 +613,8 @@ def profile_view(request):
     }
     return render(request, 'userside/profile.html', context)
 
+@login_required
+@never_cache
 
 def restpassword(request):
     old = ''
@@ -609,37 +665,79 @@ def restpassword(request):
     return render(request, 'userside/profile.html')  # Render your template as needed
 
  
+@login_required
+@never_cache
+
+# def add_address(request):
+#     address = Address.objects.filter(user=request.user)
+    
+             
+#     if request.method=='POST':
+#       if  request.user.is_authenticated:      
+#         address_line1 = request.POST.get('addressLine1')
+        
+#         city = request.POST.get('city')
+#         state = request.POST.get('state')
+#         postalCode = request.POST.get('postalCode')
+#         country = request.POST.get('country')
+#         phoneNumber = request.POST.get('phoneNumber')
+        
+#         Address.objects.create(
+#             user=request.user,
+#             address_line1=address_line1,
+            
+#             city=city,
+#             state=state,
+#             postal_code=postalCode,
+#             country=country,
+#             phone_number=phoneNumber,
+          
+#         )
+#         messages.success(request, 'Address added successfully!')
+#         return redirect('profile') 
+#         context={
+#              'address': address
+#         }
+
+#     return render(request,'userside/profile.html')
+
 
 def add_address(request):
-    address = Address.objects.filter(user=request.user)
+    # Ensure user is authenticated
+    if not request.user.is_authenticated:
+        messages.error(request, "You need to be logged in to add an address.")
+        return redirect('login')  # Redirect to login if user is not authenticated
 
-    if request.method=='POST':
+    if request.method == 'POST':
+        # Get form data
         address_line1 = request.POST.get('addressLine1')
-        
         city = request.POST.get('city')
         state = request.POST.get('state')
         postalCode = request.POST.get('postalCode')
         country = request.POST.get('country')
         phoneNumber = request.POST.get('phoneNumber')
-        
-        Address.objects.create(
-            user=request.user,
-            address_line1=address_line1,
-            
-            city=city,
-            state=state,
-            postal_code=postalCode,
-            country=country,
-            phone_number=phoneNumber,
-          
-        )
-        messages.success(request, 'Address added successfully!')
-        return redirect('profile') 
-        context={
-             'address': address
-        }
 
-    return render(request,'userside/profile.html')
+        # Check if user exists before creating the address
+        if request.user.is_authenticated:
+            user = request.user
+            Address.objects.create(
+                user=user,  # Use the correct authenticated user
+                address_line1=address_line1,
+                city=city,
+                state=state,
+                postal_code=postalCode,
+                country=country,
+                phone_number=phoneNumber,
+            )
+
+            messages.success(request, 'Address added successfully!')
+            return redirect('profile')
+
+    return render(request, 'userside/profile.html')
+
+
+@login_required
+@never_cache
 
 def set_default_address(request):
     if request.method == 'POST':
@@ -657,6 +755,9 @@ def set_default_address(request):
             print("No address selected")  # Optional debugging for the case when nothing is submitted
 
     return redirect('profile')
+@login_required
+@never_cache
+
 def edit_address(request , address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
     # address = get_object_or_404(Address, id=address_id)
@@ -682,12 +783,16 @@ def edit_address(request , address_id):
       
     }
     return render(request,'userside/profile.html',context)
+@login_required
+@never_cache
 
 def unlist_address(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
     address.status = 'unlisted'
     address.save()
     return redirect('profile') 
+@login_required
+@never_cache
 
 def restore_all_addresses(request):
     Address.objects.filter(user=request.user).update(status='listed')
@@ -709,6 +814,8 @@ def restore_all_addresses(request):
     
 #     return redirect('cart')
 
+@login_required
+@never_cache
 
 def add_to_cart(request):
     if request.method == 'POST':
@@ -740,7 +847,9 @@ def add_to_cart(request):
         return redirect('cart')
     else:
         return redirect('home') 
- 
+@login_required
+@never_cache
+
 def view_cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
     cart_items = cart.items.all()  # Get all cart items for this user
@@ -772,6 +881,8 @@ def view_cart(request):
         'cart_data': cart_data,
         'cart_total': cart_total
     })
+@login_required
+
 def update_cart(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
     
@@ -784,6 +895,8 @@ def update_cart(request, item_id):
     return redirect('cart')
 
 #  
+@login_required
+@never_cache
 
 @method_decorator(csrf_exempt, name='dispatch')  # Only if you're not using CSRF tokens
 def update_cart_item(request, item_id):
@@ -804,112 +917,16 @@ def update_cart_item(request, item_id):
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
 
+@login_required
 
 def delete_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
     cart_item.delete()
     messages.success(request, 'Item removed from cart successfully.')
     return redirect('cart')
-
-# def checkout(request):
-#     # Ensure the user is authenticated
-#     if not request.user.is_authenticated:
-#         return redirect('login')  # Redirect to login if the user is not authenticated
-
-#     # Get the cart items based on the user's cart
-#     cart_items = CartItem.objects.filter(cart__user=request.user)
-#     print('cart_items:', cart_items)
-    
-#     # Fetch user addresses
-#     user_addresses = Address.objects.filter(user=request.user, status="listed")
-
-#     # Initialize item_details list
-#     item_details = []
-#     first_image = variants.images.first().image.url if variants.images.exists() else None
-
-#     # Gather item details directly from cart_items
-#     for item in cart_items:
-#         item_total_price = item.variant.price * item.quantity  # Calculate total price for each item
-        
-#         # Append item details for rendering, including variant properties
-#         item_details.append({
-#             'image':  item.variant.product.image.url if item.variant.product.image else '',  # Adjust to point to the correct image field
-#             'name': item.variant.product.name,
-#             'quantity': item.quantity,
-#             'price_per_unit': item.variant.price,
-#             'total_price': item_total_price,
-#             'color': item.variant.colour,  # Access color
-#             'size': item.variant.size,    # Access size
-#             'type': item.variant.type1,
-#             'first_image': first_image,
-# # Access type
-#         })
-
-#     # Calculate the total price for all items in the cart
-#     total_price = sum(detail['total_price'] for detail in item_details)
-#     print('item_details:', item_details)
-
-#     # Prepare the context to pass to the template
-#     context = {
-#         'user_addresses': user_addresses,
-#         'item_details': item_details,  # Pass item_details to the template
-#         'cart_total': total_price,     # Total price for checkout
-#     }
-
-#     return render(request, 'userside/checkout.html', context)
-
-
+ 
+@login_required
 @never_cache
-# def checkout(request):
-#     # Ensure the user is authenticated
-#     if not request.user.is_authenticated:
-#         return redirect('login')  # Redirect to login if the user is not authenticated
-
-#     # Get the cart items based on the user's cart
-#     cart_items = CartItem.objects.filter(cart__user=request.user)  # Filter cart items for the logged-in user
-#     print('cart_items:', cart_items)
-    
-#     # Fetch user addresses
-#     user_addresses = Address.objects.filter(user=request.user, status="listed")
-
-#     # Initialize item_details list
-#     item_details = []  
-#     cart_total = 0  # Initialize cart total
-
-#     # Gather item details directly from cart_items
-#     for item in cart_items:
-#         variant = item.variant  # Get the variant for the cart item
-#         item_total_price = variant.price * item.quantity  # Calculate total price for each item
-#         cart_total += item_total_price  # Update the cart total
-        
-#         # Get the first image of this variant if it exists
-#         first_image = variant.images.first().image.url if variant.images.exists() else None
-        
-#         # Append item details for rendering, including variant properties
-#         item_details.append({
-#             'image': first_image,  # First image of the variant
-#             'name': variant.product.name,
-#             'quantity': item.quantity,
-#             'price_per_unit': variant.price,
-#             'total_price': item_total_price,
-#             'color': variant.colour,  # Access color
-#             'size': variant.size,    # Access size
-#             'type': variant.type1,   # Access type
-#         })
-
-#     # Prepare the context to pass to the template
-#     context = {
-#         'user_addresses': user_addresses,
-#         'item_details': item_details,  # Pass item_details to the template
-#         'cart_total': cart_total,
-#         'warning_message': request.GET.get('warning_message'),  # Check for warning message
-# # Total price for checkout
-#     }
-
-#     return render(request, 'userside/checkout.html', context)
-
-
-
 
 def checkout(request):
     # Ensure the user is authenticated
@@ -997,7 +1014,7 @@ def checkout(request):
 
 
 
-
+@login_required
 
 @never_cache
 def single_checkout(request):
@@ -1045,6 +1062,8 @@ def single_checkout(request):
 
 logger = logging.getLogger(__name__)
  
+@login_required
+@never_cache
 
 def get_address_by_postal_code(request):
     postal_code = request.GET.get('postal_code')
@@ -1097,6 +1116,8 @@ def get_address_by_postal_code(request):
     logger.warning('Postal code not provided or invalid: %s', postal_code)
     return JsonResponse({'error': 'Postal code not provided'}, status=400)
 
+@login_required
+@never_cache
 
 def save_address(request):
     if request.method == 'POST':
@@ -1134,120 +1155,10 @@ def save_address(request):
     logger.warning('Invalid request method: %s', request.method)
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-
-# def place_order(request):
-#     if request.method == 'POST':
-#         # Create a new Order
-#         order = Order(
-#             user=request.user,
-#             total_price=0,  # This will be calculated later
-#             payment_type=request.POST.get('payment_type', 'COD'),  # Replace with your payment logic
-#             created_at=timezone.now(),
-#         )
-#         order.save()  # Save order first to get the order ID
-        
-#         total_price = 0  # Initialize total price
-        
-#         # Handle each item
-#         for i in range(len(request.POST.getlist('item_id'))):
-#             item_id = request.POST.getlist('item_id')[i]
-#             item_name = request.POST.getlist('item_name')[i]
-#             item_quantity = int(request.POST.getlist('item_quantity')[i])
-#             item_color = request.POST.getlist('item_color')[i]
-#             item_size = request.POST.getlist('item_size')[i]
-#             item_type = request.POST.getlist('item_type')[i]
-#             item_price = float(request.POST.getlist('item_price')[i])
-#             item_total = float(request.POST.getlist('item_total')[i])
-            
-#             # Create OrderItem
-#             order_item = OrderItem(
-#                 order=order,
-#                 variants=Variants.objects.get(id=item_id),  # Assuming you have a Variants model
-#                 quantity=item_quantity,
-#                 price=item_price,
-#                 subtotal_price=item_total,
-#             )
-#             order_item.save()  # Save each OrderItem
-            
-#             total_price += item_total  # Accumulate total price
-            
-#         # Update order total price
-#         order.total_price = total_price
-#         order.save()
-
-#         messages.success(request, 'Order placed successfully!')
-#         return redirect('place_order')  # Redirect to a confirmation page
-    
-
-#     return render(request,'userside/placeorder.html')
-
-
-# def place_order(request):
-#     print("Starting place_order function")  # Debug print to confirm function call
-    
-#     if request.method == 'POST':
-#         shipping_address_id = request.POST.get('address')  # Get the selected address ID
-#         payment_method = request.POST.get('payment')
-        
-#         print("shipping_address_id:", shipping_address_id)
-#         print("payment_method:", payment_method)
-#         total_price = request.POST.get('total_price')
-#         order_id = new_order.id 
-#         # Print the total price to the console
-#         print("Total Price:", total_price)
-#         if not shipping_address_id or not payment_method:
-#             messages.error(request, "Please select a shipping address and payment method.")
-#             return redirect('place_order')  # Reload the page if either field is missing
-        
-#         try:
-#             # Fetch the shipping address for the logged-in user
-#             shipping_address = Address.objects.get(id=shipping_address_id, user=request.user)
-#         except Address.DoesNotExist:
-#             messages.error(request, "Selected address does not exist.")
-#             return redirect('userproducts')  # Redirect back to the order page
-
-#         # Create the order with a generated tracking number
-#         order = Order.objects.create(
-#             user=request.user,
-#             shipping_address=shipping_address,
-#             total_price=total_price,
-#             payment_type=payment_method,
-#             tracking_number=str(uuid.uuid4().hex[:8])  # Generate tracking number
-#         )
-#         print()
-
-#         print("Order created:", order)  # Debugging output to verify order creation
-        
-#         # Fetch items from the user's cart
-#         try:
-#             cart = Cart.objects.get(user=request.user)
-#             cart_items = CartItem.objects.filter(cart=cart)
-#         except Cart.DoesNotExist:
-#             messages.error(request, "No items in the cart.")
-#             return redirect('userproducts')
-
-#         # Add each item in the cart to the OrderItem model
-#         for cart_item in cart_items:
-#             OrderItem.objects.create(
-#                 order=order,
-#                 variants=cart_item.variant,
-#                 quantity=cart_item.quantity,
-#                 price=cart_item.variant.price,
-#                 subtotal_price=cart_item.item_total()  # This assumes you have the method defined
-#             )
-#             print("Order item created for variant:", cart_item.variant)  # Debug output for each item added
-
-#         # Clear the user's cart after placing the order
-#         cart.items.all().delete()  # Assuming `items` is the related name for cart items
-
-#         messages.success(request, "Your order has been placed successfully.")
-#         return redirect('place_order')  # Redirect to a success page
-    
-#     else:
-#         # Fetch the user's addresses to display in the template
-#         shipping_addresses = Address.objects.filter(user=request.user)
-#         return render(request, 'userside/placeorder.html', {'shipping_addresses': shipping_addresses})  
-    
+  
+@login_required
+@never_cache
+ 
 def place_order(request):
     print("Starting place_order function")  # Debug print to confirm function call
     
@@ -1312,6 +1223,8 @@ def place_order(request):
         return render(request, 'userside/placeorder.html', {'shipping_addresses': shipping_addresses})
     
 
+@login_required
+@never_cache
 
 def order_summary(request):
     # Assume item_details and cart_total are calculated from the session or database
@@ -1347,9 +1260,12 @@ def order_summary(request):
         'cart_total': cart_total,
     }
     return render(request, 'order_summary.html', context)
+@login_required
 
 def order_confirmation(request):
     return render(request, 'order_confirmation.html')
+@login_required
+@never_cache
 
 def order_detail(request):
     # Fetch the order using the given order_id
@@ -1372,6 +1288,8 @@ def order_detail(request):
     
     return render(request, 'userside/uder_order.html', context)
 
+@login_required
+@never_cache
 
 def cancel_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
@@ -1396,3 +1314,89 @@ def cancel_order(request, order_id):
     
     return render(request, 'cancel_order.html', context)
  
+ 
+@login_required
+
+def submit_feedback(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        comment = request.POST.get('comment')
+
+        # Save the feedback to the database
+        Feedback.objects.create(email=email, comment=comment)
+
+        # Show a success message
+        messages.success(request, 'Thank you for your feedback!')
+
+        # Redirect to the desired page
+        return redirect('home')  # Change this to your desired redirect URL
+
+    return render(request, 'userside/404.html')
+ 
+ 
+ 
+def password_reset_confirm(request, uidb64, token):
+    try:
+        uid = force_text(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if request.method == 'POST':
+        form = SetPasswordForm(user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, 'Your password has been set. You can now log in.')
+            return redirect('userlogin')  # Redirect to login page
+    else:
+        form = SetPasswordForm(user)
+
+    return render(request, 'userside/reset_confirm_template.html', {'form': form})
+
+ 
+def password_reset(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        try:
+            user = User.objects.get(email=email)
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            # Generate the correct link based on the request's domain
+            password_reset_link = request.build_absolute_uri(
+                f"auth/password-reset-confirm/{uid}/{token}/"
+            )
+
+            # Send the email with the correct domain
+            send_mail(
+                'Password Reset Request',
+                f'You\'re receiving this email because you requested a password reset for your user account.\n\n'
+                f'Please go to the following page and choose a new password:\n\n'
+                f'{password_reset_link}\n\n'
+                f'Your username, in case you’ve for: {user.username}\n\n'
+                f'Thanks for using our site!',
+                ' sayyedrabeeh240@gmail.com',  # Replace with your actual sender email
+                [email],
+                fail_silently=False,
+            )
+            messages.success(request, 'Password reset link sent to your email.')
+            return redirect('userlogin')  # Redirect to a success page
+        except User.DoesNotExist:
+            messages.error(request, 'No user found with that email address.')
+
+    return render(request, 'userside/forgotpassword.html')
+
+ 
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'userside/forgotpassword.html'  # Update this to your template's path
+    success_url = reverse_lazy('userlogin') 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['protocol'] = self.request.scheme  # 'http' or 'https'
+        context['domain'] = self.request.get_host()  # This gives you the domain (localhost or live domain)
+        return context
+    
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'reset_confirm_template.html'  # Replace with your actual template
+    success_url = reverse_lazy('userlogin') 

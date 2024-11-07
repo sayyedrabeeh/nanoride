@@ -12,7 +12,7 @@
     <!--introjs--> 
     <link rel="stylesheet" href="{% static 'intro.js/minified/introjs.min.css' %}">
 
-     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+     {% comment %} <link href="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet"> {% endcomment %}
 
 
     <!-- Bootstrap CSS -->
@@ -739,7 +739,7 @@
 .hero {
     position: relative;
     height: 100vh;
-    background: url('{% static 'images/p7.jpg' %}'); no-repeat center center/cover;
+    background: url('{% static 'images/gi.gif' %}'); no-repeat center center/cover;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1266,13 +1266,14 @@ button:hover {
     <section class="hero" data-step="1" data-intro="Welcome to NANORIDE. Start exploring our amazing collection!">
         <div class="hero-overlay">
             <h1>Welcome to NANORIDE</h1>
-            <p>Your tagline or mission statement goes here.</p>
-            <a href="#featured-products" class="cta-button">Shop Now</a>
-            <button id="startTourButton"style='margin-top:10px;' class="btn btn-sucess">Start Demo Tour</button>
+            <p>Small Cars With Big Dreams.</p>
+            <a href="{% url 'userproducts' %}" class="cta-button">Shop Now</a>
+            <button id="startTourButton"style='margin-top:10px; color:white;' class="btn btn-sucess">Start Demo Tour</button>
+            
 
         </div>
     </section>
-    
+                
 
     
      
@@ -1286,16 +1287,16 @@ button:hover {
 					<div class="carousel-item {% if forloop.first %}active{% endif %}">
 						<div class="row g-3">
 							<div class="col-12">
-								<h2 class="product-title" style='color: green'>Product: {{ product.name }}</h2>  <!-- Display the product name -->
+								<h2 class="product-title" style='color: green'>Product: {{ product.name }}</h2>   
 							</div>
 							{% for variant in product.variants.all %}
 								{% if variant.images.first %}
 									<div class="col-6 col-md-3">
 										<div class="product-card">
-											<a href="{% url 'singleproduct' product.id %}"> <!-- Link to single product page -->
+											<a href="{% url 'singleproduct' product.id %}">  
 												<img src="{{ variant.images.first.image.url }}" alt="{{ variant.type1 }} - {{ variant.colour }}">
 												<div class="product-info">
-													<div class="product-variant">{{ variant.type1 }} - {{ variant.colour }} - Size: {{ variant.size }}</div> <!-- Display size -->
+													<div class="product-variant">{{ variant.type1 }} - {{ variant.colour }} - Size: {{ variant.size }}</div>  
 													<div class="product-price">${{ variant.price }}</div>
 													{% if variant.sale_price %}
 														<div class="product-price"><s>${{ variant.original_price }}</s> ${{ variant.sale_price }}</div>
@@ -1363,10 +1364,11 @@ button:hover {
 
  
              <div class="row g-3">
-                {% for product in products %}
+                {% for product in latest10 %}
                     <div class="col-6 col-md-3">
                         <div class="product-card">
                             <div class="product-image">
+                                <a href="{% url 'singleproduct' product.id %}"> 
                                 {% if product.variants.first and product.variants.first.images.first %}
                                     <img src="{{ product.variants.first.images.first.image.url }}" alt="{{ product.name }}" class="primary-image">
                                 {% else %}
@@ -1376,12 +1378,20 @@ button:hover {
                                 {% if product.variants.first.images.all|length > 1 %}
                                     <img src="{{ product.variants.first.images.all.1.image.url }}" alt="{{ product.name }}" class="secondary-image">
                                 {% endif %}
+                            </a> 
                             </div>
             
                             <div class="product-info">
                                 <div class="product-name">{{ product.name }}</div>
                                 <div class="product-price">${{ product.variants.first.price }}</div>  <!-- Show price of first variant -->
-                                <button class="add-to-cart-btn">Add to cart</button>
+                               <!-- Link to Add to Cart, passing the variant ID directly -->
+                               <form method="POST" action="{% url 'add_to_cart' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}"> <!-- First variant ID -->
+                                <p>ID: {{ product.variants.first.id }}</p>
+                                <button type="submit" class="add-to-cart-button">Add to Cart</button>
+                            </form>
+                            
                             </div>
                         </div>
                     </div>
@@ -1391,7 +1401,7 @@ button:hover {
 
 </section>
 
-<div class="banner-left">
+<div class="banner-left" data-step="6" data-intro="New Arraivals Display Here .">
 	<img src="{% static 'images/p3.jpg' %}" alt="Banner Image 3"> <!-- Background image -->
     <div class="banner-left-content">
         <h2 class="banner-left-title" style='color: green'>Explore New Arrivals!</h2>
@@ -1400,54 +1410,37 @@ button:hover {
 </div>
 
 <section style="margin:20px">
-	 
-	{% comment %} <div class="grid-container">
-		{% for product in products %}
-			{% for variant in product.variants.all %}
-				<div class="grid-item">
-					<div class="product-card">
-						<span class="discount-tag">Sale</span>
-						{% if variant.images.count > 1 %}
-							<img src="{{ variant.images.all.1.image.url }}" alt="Product Image" class="product-image"> <!-- Second image if available -->
-						{% else %}
-							<img src="{% static 'images/default.jpg' %}" alt="Default Image" class="product-image"> <!-- Placeholder image if no second image -->
-						{% endif %}
-						<div class="product-info">
-							<h3 class="item-title">{{ product.name }}</h3>
-							<p class="item-price">${{ variant.price }}</p>
-							<button class="cart-button">Add to Cart</button>
-						</div>
-					</div>
-				</div>
-			{% endfor %}
-		{% endfor %}
-	</div> {% endcomment %}
-	
-	
-
-    <!-- Add more grid items as needed -->
+ 
  
 
-    <div class="grid-container">
-        {% for product in products %}
+    <div class="grid-container" data-step="7" data-intro="You Get Every Products From here.">
+        {% for product in first10 %}
             {% for variant in product.variants.all %}
                 <div class="grid-item">
                     <div class="product-card">
                         <span class="discount-tag">Sale</span>
     
                         <div class="product-image-container">
+                            <a href="{% url 'singleproduct' product.id %}"> 
+
                             {% if variant.images.count > 1 %}
                                 <img src="{{ variant.images.all.0.image.url }}" alt="Product Image" class="primary-image"> <!-- First image -->
                                 <img src="{{ variant.images.all.1.image.url }}" alt="Product Image" class="secondary-image"> <!-- Second image -->
                             {% else %}
                                 <img src="{% static 'images/default.jpg' %}" alt="Default Image" class="primary-image"> <!-- Placeholder image if no second image -->
                             {% endif %}
+                            </a>
                         </div>
     
                         <div class="product-info">
                             <h3 class="item-title">{{ product.name }}</h3>
                             <p class="item-price">${{ variant.price }}</p>
-                            <button class="cart-button">Add to Cart</button>
+                            <form method="POST" action="{% url 'add_to_cart' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}"> <!-- First variant ID -->
+                                <p>ID: {{ product.variants.first.id }}</p>
+                                <button type="submit" class="add-to-cart-button">Add to Cart</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -1460,7 +1453,7 @@ button:hover {
 
 </section>
 
-<div class="banner-center">
+<div class="banner-center" data-step="8" data-intro="Seasonal Sales & Limited  Are Here!.">
     <img src="{% static 'images/p6.jpg' %}" alt="Banner Image 4"> <!-- Background image -->
     <div class="banner-gradient"></div> <!-- Gradient overlay -->
     <div class="banner-center-content">
@@ -1468,25 +1461,26 @@ button:hover {
         <p class="banner-center-subtitle">Don’t miss out on exclusive discounts.</p>
     </div>
 </div>
-<section class="testimonials">
+<section class="testimonials"data-step="9" data-intro="Customers Review ." >
     <h2>What Our Customers Say</h2>
     <div class="testimonial-container">
+        {% for feedback in feedback_list %}
         <div class="testimonial-card">
-            <p>"Great service and quality products! Highly recommend!"</p>
-            <h4>- Customer Name</h4>
+            <p>"{{ feedback.comment }}"</p>
+            <h4 style="color:green;">- {{ feedback.email }}</h4>
         </div>
-        <div class="testimonial-card">
-            <p>"I love shopping here! Fast shipping and excellent customer support."</p>
-            <h4>- Customer Name</h4>
-        </div>
+    {% empty %}
+        <p>No feedback available yet.</p>
+    {% endfor %}
         <!-- Repeat for more testimonials -->
     </div>
 
-    <div class="testimonial-form">
+    <div class="testimonial-form" data-step="10" data-intro="Leave Your FeedBack Here .">
         <h3>Leave Your Feedback</h3>
-        <form action="#" method="post">
-            <input type="email" placeholder="Your Email" required>
-            <textarea placeholder="Your Comment" required></textarea>
+        <form action="{% url 'submit_feedback' %}" method="post">
+            {% csrf_token %}
+            <input type="email"name='email' placeholder="Your Email" required>
+            <textarea placeholder="Your Comment" name='comment'required></textarea>
             <button type="submit">Submit</button>
         </form>
     </div>
@@ -1496,22 +1490,30 @@ button:hover {
 
 <section style="margin: 20px"> 
     <div class="circle-grid">
-        {% for product in products %}
+        {% for product in card %}
             {% for variant in product.variants.all %}
                 <div class="circle-item">
                     <div class="image-container">
+                        <a href="{% url 'singleproduct' product.id %}"> 
+
                         {% if variant.images.last %}
                             <img src="{{ variant.images.last.image.url }}" alt="Product Image" class="circular-image"> <!-- Last image -->
                         {% else %}
                             <img src="{% static 'images/default.jpg' %}" alt="Default Image" class="circular-image"> <!-- Default image if no images -->
                         {% endif %}
+                        </a>
                     </div>
                     <div class="details">
                         <h3 class="item-title">{{ product.name }}</h3> <!-- Product Name -->
-                        <p class="item-description">Short description of the product goes here.</p> <!-- Placeholder description -->
+                        <p class="item-description">{{ product.description|truncatechars:100 }}</p> <!-- Placeholder description -->
                         <p class="item-price">${{ variant.price }}</p> <!-- Variant Price -->
-                        <button class="cart-button">Add to Cart</button> <!-- Add to Cart Button -->
-                    </div>
+                        <form method="POST" action="{% url 'add_to_cart' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}"> <!-- First variant ID -->
+                            <p>ID: {{ product.variants.first.id }}</p>
+                            <button type="submit" class="add-to-cart-button">Add to Cart</button>
+                        </form>                 
+                       </div>
                 </div>
             {% endfor %}
         {% endfor %}
@@ -1527,44 +1529,26 @@ button:hover {
 </section>
 
 
-<script src="{% static 'intro.js/minified/intro.min.js' %}"></script>
-
-
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-
-<!-- Bootstrap JavaScript (required by Bootstrap Tour) -->
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-
-<!-- Bootstrap Tour JavaScript -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tour/0.12.0/js/bootstrap-tour.min.js"></script>
-
-     <!--introjs--> 
-     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tour/0.11.0/css/bootstrap-tour.min.css" rel="stylesheet">
-
-<!-- Bootstrap JS Bundle with Popper -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'intro.js/minified/intro.min.js' %}"></script>
 
 <script>
     // script.js
-const navbarToggle = document.getElementById('navbar-toggle');
-const navbarMenu = document.querySelector('.navbar-menu');
+    const navbarToggle = document.getElementById('navbar-toggle');
+    const navbarMenu = document.querySelector('.navbar-menu');
 
-navbarToggle.addEventListener('click', () => {
-    navbarMenu.classList.toggle('active');
-});
-
-document.getElementById('startTourButton').addEventListener('click', function() {
-    introJs().start();
-});
- 
-.start();  
-const getDynamicPosition = (element) => {
-    // Example logic for determining position
-    if (window.innerWidth < 600) {
-        return 'top'; // For small screens, show at the top
+    if (navbarToggle && navbarMenu) {
+        navbarToggle.addEventListener('click', () => {
+            navbarMenu.classList.toggle('active');
+        });
     }
-    return 'right'; // For larger screens, show on the right
-};
+
+    // Start tour functionality
+    document.getElementById('startTourButton').addEventListener('click', function() {
+        introJs().start(); // This line starts the intro.js tour
+    });
 
  
 
